@@ -178,6 +178,16 @@ a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sum-head { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
 .sum-head div span { display: block; font: 500 .7rem/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .sum-head div b { font: 600 1rem/1.3 var(--mono); }
+/* Pestañita de tiempo de uso bajo la fecha */
+.age-pop { position: relative; display: grid; gap: 4px; margin-top: 6px; padding: 12px 14px; border-radius: 4px; border: 1.5px solid currentColor; animation: pop-in .28s ease-out; }
+.age-pop::before { content: ""; position: absolute; top: -8px; left: 22px; width: 12px; height: 12px; background: inherit; border-left: 1.5px solid currentColor; border-top: 1.5px solid currentColor; transform: rotate(45deg); }
+.age-pop b { font: 700 1.7rem/1.05 var(--display); letter-spacing: .02em; }
+.age-pop span { font-size: .88rem; color: var(--ink); }
+.age-pop.ok { color: var(--ok); background: var(--ok-soft); }
+.age-pop.warn { color: var(--warn); background: var(--warn-soft); }
+.age-pop.bad { color: var(--bad); background: var(--bad-soft); }
+@keyframes pop-in { from { opacity: .3; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .age-pop { animation: none; } }
 .sum-age { font: 700 1.35rem/1.15 var(--display); letter-spacing: .02em; text-wrap: balance; padding: 12px 14px; border-radius: 3px; }
 .sum-age.ok { color: var(--ok); background: var(--ok-soft); }
 .sum-age.warn { color: var(--warn); background: var(--warn-soft); }
@@ -274,7 +284,7 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
           <button class="lang" id="dtWar" data-i="dtWar" aria-pressed="false"></button>
         </div>
         <input class="txt" id="buyDate" type="date">
-        <div><span class="chip none" id="ageChip"></span></div>
+        <div class="age-pop" id="agePop" role="status" hidden><b id="agePopBig"></b><span id="agePopSub"></span></div>
       </div>
     </div>
     <div class="path" data-i="apHint"></div>
@@ -404,7 +414,7 @@ const UI = {
     phSerial: "Ej. DNQXXXXXXXXX", phModel: "Ej. iPhone 14 Pro 128 GB",
     sSerial: "Serial", sFull: "Modelo (Apple)", sDate: "Compra", estimated: "estimada",
     ageNone: "Sin fecha", age: (y, m) => [y ? `${y} ${y === 1 ? "año" : "años"}` : "", m ? `${m} ${m === 1 ? "mes" : "meses"}` : ""].filter(Boolean).join(" y ") || "menos de 1 mes",
-    ageSentence: (d, a, est) => `Comprado el ${d}${est}, por lo tanto tiene ${a} de uso`,
+    ageSentence: (d, a, est) => `Comprado el ${d}${est}, por lo tanto tiene ${a} de uso`, ofUse: "de uso",
     ageNew: "Casi nuevo", ageMid: "Uso normal", ageOld: "Ya tiene años: negociar precio", ageVeryOld: "Equipo viejo: precio más bajo",
     qrShow: "Mostrar código QR", imported: "✓ Resultado de pantalla cargado desde el otro celular",
     tmEyebrow: "Modo prueba de pantalla", tmTitle: "Prueba de pantalla",
@@ -449,7 +459,7 @@ const UI = {
     phSerial: "E.g. DNQXXXXXXXXX", phModel: "E.g. iPhone 14 Pro 128 GB",
     sSerial: "Serial", sFull: "Model (Apple)", sDate: "Purchased", estimated: "estimated",
     ageNone: "No date", age: (y, m) => [y ? `${y} ${y === 1 ? "year" : "years"}` : "", m ? `${m} ${m === 1 ? "month" : "months"}` : ""].filter(Boolean).join(" ") || "under 1 month",
-    ageSentence: (d, a, est) => `Purchased on ${d}${est}, so it has ${a} of use`,
+    ageSentence: (d, a, est) => `Purchased on ${d}${est}, so it has ${a} of use`, ofUse: "of use",
     ageNew: "Almost new", ageMid: "Normal use", ageOld: "A few years old: negotiate price", ageVeryOld: "Old device: lower price",
     qrShow: "Show QR code", imported: "✓ Screen result loaded from the other phone",
     tmEyebrow: "Screen test mode", tmTitle: "Screen test",
@@ -573,7 +583,8 @@ function ageInfo() {
   const tag = months < 12 ? t.ageNew : months < 24 ? t.ageMid : months < 36 ? t.ageOld : t.ageVeryOld;
   const date = p.toLocaleDateString(st.lang === "es" ? "es-CO" : "en-US", { day: "numeric", month: "short", year: "numeric" });
   const est = st.dateKind === "war" ? ` (${t.estimated})` : "";
-  return { cls, label: `${t.age(y, mo)} · ${tag}`, text: `${date}${est} · ${t.age(y, mo)} (${tag})`, sentence: t.ageSentence(date, t.age(y, mo), est).toUpperCase() };
+  return { cls, label: `${t.age(y, mo)} · ${tag}`, text: `${date}${est} · ${t.age(y, mo)} (${tag})`, sentence: t.ageSentence(date, t.age(y, mo), est).toUpperCase(),
+    big: `${t.age(y, mo)} ${t.ofUse}`.toUpperCase(), sub: `${t.sDate}: ${date}${est} · ${tag}` };
 }
 function battText() {
   const hi = healthInfo(), ci = cycleInfo(), t = T();
@@ -689,7 +700,10 @@ function update() {
 
   const p = st.model && t.prefix[st.model[0]];
   const ai = ageInfo();
-  $("ageChip").className = "chip " + ai.cls; $("ageChip").textContent = ai.label;
+  $("agePop").hidden = !ai.big;
+  $("agePop").className = "age-pop " + ai.cls;
+  $("agePopBig").textContent = ai.big || "";
+  $("agePopSub").textContent = ai.sub || "";
   $("sumAge").hidden = !ai.sentence;
   $("sumAge").className = "sum-age " + ai.cls; $("sumAge").textContent = ai.sentence || "";
   $("dtBuy").setAttribute("aria-pressed", String(st.dateKind === "buy"));
