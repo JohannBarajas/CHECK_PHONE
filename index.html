@@ -73,6 +73,8 @@ p { margin: 0; }
 
 header { display: grid; gap: 8px; }
 header p { max-width: 62ch; }
+.byline { justify-self: start; font: 600 .78rem/1 var(--mono); letter-spacing: .06em; color: var(--muted); text-decoration: none; }
+.byline:hover { color: var(--accent); }
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 .seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 3px; overflow: hidden; }
@@ -274,6 +276,7 @@ footer .by a { color: var(--ink); }
       </div>
     </div>
     <h1 data-i="title"></h1>
+    <a class="byline" href="#credits"><span data-i="byline"></span> johannbarajas</a>
     <p class="muted" data-i="intro"></p>
     <div><span class="chip ok" id="importNote" data-i="imported" hidden></span></div>
   </header>
@@ -298,18 +301,6 @@ footer .by a { color: var(--ink); }
       <a class="btn" href="https://www.stolenphonechecker.org/" target="_blank" rel="noopener" data-i="cdUs"></a>
       <a class="btn" href="https://www.imeicolombia.com.co/" target="_blank" rel="noopener" data-i="cdCo"></a>
     </div>
-  </section>
-
-  <!-- Revisión a distancia: el cliente se revisa solo y manda el resultado -->
-  <section class="panel remote" aria-labelledby="remH">
-    <h2 id="remH" data-i="remTitle"></h2>
-    <p class="muted" data-i="remHint"></p>
-    <div class="field"><label for="ownerWa" data-i="remWa"></label><input class="txt" id="ownerWa" inputmode="tel" autocomplete="tel" placeholder="17183149761"></div>
-    <div class="actions">
-      <a class="btn send-wa" id="remSend" target="_blank" rel="noopener" data-i="remSend"></a>
-      <button class="btn solid" id="remQrBtn" data-i="remQr"></button>
-    </div>
-    <div class="qr" id="remQr" hidden></div>
   </section>
 
   <!-- Paso 1: bloqueos (lo que tumba una compra) -->
@@ -400,7 +391,19 @@ footer .by a { color: var(--ink); }
     <textarea id="report" readonly aria-label="Reporte / Report"></textarea>
   </section>
 
-  <footer>
+  <!-- Revisión a distancia: el cliente se revisa solo y manda el resultado -->
+  <section class="panel remote" aria-labelledby="remH">
+    <h2 id="remH" data-i="remTitle"></h2>
+    <p class="muted" data-i="remHint"></p>
+    <div class="field"><label for="ownerWa" data-i="remWa"></label><input class="txt" id="ownerWa" inputmode="tel" autocomplete="tel" placeholder="17183149761"></div>
+    <div class="actions">
+      <a class="btn send-wa" id="remSend" target="_blank" rel="noopener" data-i="remSend"></a>
+      <button class="btn solid" id="remQrBtn" data-i="remQr"></button>
+    </div>
+    <div class="qr" id="remQr" hidden></div>
+  </section>
+
+  <footer id="credits">
     <div class="by"><span data-i="madeBy"></span> <a href="mailto:johannbarajas@gmail.com">johannbarajas@gmail.com</a></div>
     <div class="wa">
       <span data-i="custom"></span>
@@ -507,7 +510,7 @@ const UI = {
     cmTests: "Pruebas", cmDoneTitle: "Enviar resultado", cmDoneHint: "Toca el botón verde para mandar el resultado por WhatsApp, o muestra el QR para que lo escaneen.",
     cmSendWa: "Enviar resultado por WhatsApp", cmQr: "Mostrar QR", cmMsg: "Resultado de la revisión de mi iPhone", cmOpen: "Resultado completo:",
     yes: "Sí", no: "No",
-    madeBy: "Hecho por", custom: "¿Quieres una página personalizada?", waMsg: "Hola, vi la página Revisión iPhone y quiero una página personalizada.",
+    byline: "Creada por", madeBy: "Hecho por", custom: "¿Quieres una página personalizada?", waMsg: "Hola, vi la página Revisión iPhone y quiero una página personalizada.",
     prefix: { M: ["Nuevo (venta retail)", "Vendido nuevo por Apple o un distribuidor. Es lo ideal."], F: ["Reacondicionado", "Reparado y revendido por Apple o un operador. Funciona bien pero no es de primera mano; debe costar menos."], N: ["Reemplazo", "Equipo que Apple entregó como cambio en garantía. Es normal, pero confirma que coincida con la caja."], P: ["Personalizado", "Comprado nuevo con grabado. Revisa que la parte trasera tenga el grabado."], "3": ["Demo de exhibición", "Unidad de tienda: muchas horas encendida y batería gastada. Debe costar bastante menos."] },
     legend: { M: "Nuevo", F: "Reacondicionado", N: "Reemplazo (garantía)", P: "Personalizado (grabado)", "3": "Demo de exhibición" }
   },
@@ -567,7 +570,7 @@ const UI = {
     cmTests: "Tests", cmDoneTitle: "Send result", cmDoneHint: "Tap the green button to send the result by WhatsApp, or show the QR so it can be scanned.",
     cmSendWa: "Send result by WhatsApp", cmQr: "Show QR", cmMsg: "My iPhone check result", cmOpen: "Full result:",
     yes: "Yes", no: "No",
-    madeBy: "Made by", custom: "Want a custom page?", waMsg: "Hi, I saw the iPhone Check page and I'd like a custom page.",
+    byline: "Made by", madeBy: "Made by", custom: "Want a custom page?", waMsg: "Hi, I saw the iPhone Check page and I'd like a custom page.",
     prefix: { M: ["New (retail)", "Sold new by Apple or a reseller. This is the best case."], F: ["Refurbished", "Repaired and resold by Apple or a carrier. Works fine but is not first-hand; it should cost less."], N: ["Replacement", "Unit Apple gave as a warranty swap. Normal, but check that it matches the box."], P: ["Personalized", "Bought new with engraving. Check that the back has the engraving."], "3": ["Display demo", "Store unit: many hours powered on and a worn battery. It should cost much less."] },
     legend: { M: "New", F: "Refurbished", N: "Replacement (warranty)", P: "Personalized (engraved)", "3": "Display demo" }
   }
