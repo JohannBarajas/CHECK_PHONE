@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Revisión iPhone</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Hoja de banco de técnico: una columna, etiqueta de inspección arriba, secciones con estado OK / Falla por ítem, resumen final */
+:root {
+  --paper: #f3f6f7;
+  --sheet: #ffffff;
+  --ink: #13212b;
+  --muted: #5b6b76;
+  --line: #d6dee3;
+  --accent: #0b6f7a;
+  --accent-soft: #dceff1;
+  --ok: #1d7a3e;
+  --ok-soft: #dcf1e3;
+  --bad: #b3261e;
+  --bad-soft: #f8dedb;
+  --warn: #8a5a00;
+  --warn-soft: #f6ead0;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #0d1519; --sheet: #142027; --ink: #e4ecef; --muted: #93a4ad; --line: #26363f;
+    --accent: #5cc3cd; --accent-soft: #143a40;
+    --ok: #6fd393; --ok-soft: #153523; --bad: #ff8a80; --bad-soft: #3d1a18; --warn: #f0c25c; --warn-soft: #3a2e12;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0d1519; --sheet: #142027; --ink: #e4ecef; --muted: #93a4ad; --line: #26363f;
+  --accent: #5cc3cd; --accent-soft: #143a40;
+  --ok: #6fd393; --ok-soft: #153523; --bad: #ff8a80; --bad-soft: #3d1a18; --warn: #f0c25c; --warn-soft: #3a2e12;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body {
+  margin: 0;
+  background: var(--paper); color: var(--ink); font: 15px/1.5 var(--body);
+  padding-block: 24px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; text-wrap: balance; margin: 0; line-height: 1.05; }
+h1 { font-size: 2.6rem; text-transform: uppercase; }
+h2 { font-size: 1.45rem; text-transform: uppercase; }
+.eyebrow { font: 600 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.muted { color: var(--muted); }
+.path { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+
+header { display: grid; gap: 8px; }
+header p { margin: 0; max-width: 62ch; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 3px; overflow: hidden; }
+.seg button { font: 600 .8rem/1 var(--mono); letter-spacing: .06em; border: 0; background: transparent; color: var(--muted); padding: 10px 12px; cursor: pointer; min-width: 58px; }
+.seg button + button { border-left: 1.5px solid var(--line); }
+.seg button[aria-pressed="true"].ok { background: var(--ok); color: var(--sheet); }
+.seg button[aria-pressed="true"].bad { background: var(--bad); color: var(--sheet); }
+.seg button[aria-pressed="true"].lang { background: var(--ink); color: var(--sheet); }
+
+/* Etiqueta de inspección */
+.tag {
+  background: var(--sheet); border: 1.5px solid var(--ink); border-radius: 4px;
+  display: grid; grid-template-columns: 1fr auto; gap: 16px; padding: 16px 18px; align-items: center;
+}
+.tag .stats { display: flex; gap: 18px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.stat b { display: block; font: 700 1.9rem/1 var(--display); }
+.stat span { font: 500 .7rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.stat.ok b { color: var(--ok); } .stat.bad b { color: var(--bad); }
+.verdict { font: 700 1.15rem/1 var(--display); text-transform: uppercase; letter-spacing: .04em; padding: 10px 14px; border-radius: 3px; border: 1.5px solid currentColor; text-align: center; }
+.verdict.pending { color: var(--muted); }
+.verdict.good { color: var(--ok); background: var(--ok-soft); }
+.verdict.fail { color: var(--bad); background: var(--bad-soft); }
+.bar { grid-column: 1 / -1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
+
+/* Paneles */
+.panel { background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; padding: 18px; display: grid; gap: 12px; }
+.panel label { font-weight: 600; }
+input.big {
+  font: 600 1.5rem/1 var(--mono); letter-spacing: .06em; text-transform: uppercase;
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink);
+}
+input.big:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+.result { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; padding: 12px; border-radius: 3px; background: var(--paper); }
+.result span { display: block; }
+.letter { font: 700 2.6rem/1 var(--mono); width: 64px; height: 64px; display: grid; place-items: center; border-radius: 3px; border: 2px solid currentColor; }
+.letter.M { color: var(--ok); } .letter.F, .letter.N { color: var(--warn); } .letter.P { color: var(--accent); } .letter.X, .letter.D { color: var(--bad); }
+.result strong { display: block; font-size: 1.05rem; }
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 14px; font-size: .85rem; margin: 0; padding: 0; list-style: none; }
+.legend b { font-family: var(--mono); color: var(--accent); margin-right: 6px; }
+
+/* Batería */
+.batt { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.batt .field { display: grid; gap: 6px; }
+.unit { position: relative; }
+.unit input { padding-right: 70px; }
+.unit em { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font: 600 .9rem var(--mono); font-style: normal; color: var(--muted); pointer-events: none; }
+.gauge { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.gauge i { display: block; height: 100%; width: 0; transition: width .25s; }
+.chip { display: inline-block; font: 600 .75rem/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 6px 9px; border-radius: 3px; }
+.chip.ok { color: var(--ok); background: var(--ok-soft); }
+.chip.warn { color: var(--warn); background: var(--warn-soft); }
+.chip.bad { color: var(--bad); background: var(--bad-soft); }
+.chip.none { color: var(--muted); background: var(--paper); }
+
+/* Secciones */
+section.block { background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; }
+#sections { display: grid; gap: 20px; }
+.block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 16px 18px 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.block-head .count { font: 600 .78rem/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+ul.items { list-style: none; margin: 0; padding: 0; }
+li.item { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; padding: 12px 18px; border-bottom: 1px solid var(--line); align-items: center; }
+li.item:last-child { border-bottom: 0; }
+li.item[data-state="ok"] { background: linear-gradient(90deg, var(--ok-soft), transparent 70%); }
+li.item[data-state="bad"] { background: linear-gradient(90deg, var(--bad-soft), transparent 70%); }
+.item .t { font-weight: 600; }
+.item .h { font-size: .87rem; color: var(--muted); margin-top: 2px; }
+.item .tools { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { font: 600 .85rem/1 var(--body); padding: 10px 14px; border-radius: 3px; border: 1.5px solid var(--accent); background: var(--accent-soft); color: var(--ink); cursor: pointer; }
+.btn.solid { background: var(--accent); color: var(--sheet); }
+.btn.ghost { border-color: var(--line); background: transparent; }
+
+/* Resumen */
+.summary { border: 1.5px solid var(--ink); }
+.sum-head { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.sum-head div span { display: block; font: 500 .7rem/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sum-head div b { font: 600 1rem/1.3 var(--mono); }
+.sum-list { display: grid; gap: 14px; }
+.sum-list h3 { margin: 0 0 4px; font: 600 .75rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sum-list ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.sum-list li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; align-items: baseline; }
+.mk { font: 700 1rem/1 var(--mono); text-align: center; }
+.mk.ok { color: var(--ok); } .mk.bad { color: var(--bad); } .mk.none { color: var(--muted); }
+li.bad-row { color: var(--bad); font-weight: 600; }
+.sum-verdict { font: 700 1.6rem/1.1 var(--display); text-transform: uppercase; padding-top: 12px; border-top: 1px dashed var(--line); }
+.sum-verdict.good { color: var(--ok); } .sum-verdict.fail { color: var(--bad); } .sum-verdict.pending { color: var(--muted); }
+
+textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); resize: vertical; }
+#report { font-family: var(--mono); font-size: 12.5px; min-height: 180px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+#toast { font-size: .85rem; color: var(--ok); }
+
+/* Pruebas a pantalla completa */
+.overlay { position: fixed; inset: 0; z-index: 50; touch-action: none; user-select: none; -webkit-user-select: none; }
+#grid { display: grid; background: #000; }
+#grid div { border: 1px solid #333; background: #b3261e; }
+#grid div.on { background: #1d7a3e; }
+.ov-info { position: fixed; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 12px); z-index: 51; background: rgba(0,0,0,.75); color: #fff; font: 600 13px/1.3 var(--mono); padding: 8px 12px; border-radius: 3px; display: flex; gap: 10px; align-items: center; }
+.ov-info button { font: inherit; background: #fff; color: #000; border: 0; padding: 6px 10px; border-radius: 2px; cursor: pointer; }
+#colors { display: grid; place-items: end center; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); }
+#colors span { font: 600 12px var(--mono); padding: 6px 10px; background: rgba(127,127,127,.5); color: #fff; border-radius: 2px; }
+
+@media (max-width: 520px) {
+  h1 { font-size: 2.1rem; }
+  .tag, .result, .batt { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i, .gauge i { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="top">
+      <span class="eyebrow" data-i="eyebrow"></span>
+      <div class="seg" role="group" aria-label="Idioma / Language">
+        <button class="lang" id="lang-es" aria-pressed="false">ES</button>
+        <button class="lang" id="lang-en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+    <h1 data-i="title"></h1>
+    <p class="muted" data-i="intro"></p>
+  </header>
+
+  <div class="tag" aria-live="polite">
+    <div class="stats">
+      <div class="stat"><b id="sDone">0/0</b><span data-i="checked"></span></div>
+      <div class="stat ok"><b id="sOk">0</b><span>OK</span></div>
+      <div class="stat bad"><b id="sBad">0</b><span data-i="fails"></span></div>
+    </div>
+    <div id="verdict" class="verdict pending"></div>
+    <div class="bar"><i id="bar"></i></div>
+  </div>
+
+  <section class="panel" aria-labelledby="decH">
+    <h2 id="decH" data-i="decTitle"></h2>
+    <div class="path" data-i="decPath"></div>
+    <label for="model" data-i="modelLabel"></label>
+    <input class="big" id="model" autocomplete="off" spellcheck="false" placeholder="MQ9X3LL/A">
+    <div class="result" id="result"></div>
+    <ul class="legend" id="legend"></ul>
+  </section>
+
+  <section class="panel" aria-labelledby="batH">
+    <h2 id="batH" data-i="batTitle"></h2>
+    <div class="path" data-i="batPath"></div>
+    <div class="batt">
+      <div class="field">
+        <label for="health" data-i="health"></label>
+        <div class="unit"><input class="big" id="health" type="number" inputmode="numeric" min="1" max="100" placeholder="87"><em>%</em></div>
+        <div class="gauge"><i id="hGauge"></i></div>
+        <div><span class="chip none" id="hChip"></span></div>
+      </div>
+      <div class="field">
+        <label for="cycles" data-i="cycles"></label>
+        <div class="unit"><input class="big" id="cycles" type="number" inputmode="numeric" min="0" placeholder="312"><em data-i="cycUnit"></em></div>
+        <div class="path" data-i="cycHint"></div>
+        <div><span class="chip none" id="cChip"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="sections"></div>
+
+  <section class="panel" aria-labelledby="notesH">
+    <h2 id="notesH" data-i="notesTitle"></h2>
+    <label for="notes" class="muted" data-i="notesLabel"></label>
+    <textarea id="notes"></textarea>
+  </section>
+
+  <section class="panel summary" aria-labelledby="sumH">
+    <h2 id="sumH" data-i="sumTitle"></h2>
+    <div class="sum-head" id="sumHead"></div>
+    <div class="sum-list" id="sumList"></div>
+    <div class="sum-verdict" id="sumVerdict"></div>
+    <div class="actions">
+      <button class="btn solid" id="copy" data-i="copy"></button>
+      <button class="btn ghost" id="reset" data-i="reset"></button>
+      <span id="toast" role="status"></span>
+    </div>
+    <textarea id="report" readonly aria-label="Reporte / Report"></textarea>
+  </section>
+</div>
+
+<div class="overlay" id="grid" hidden></div>
+<div class="ov-info" id="gridInfo" hidden><span id="gridCount">0 %</span><button id="gridExit" data-i="exit"></button></div>
+<div class="overlay" id="colors" hidden><span id="colorName"></span></div>
+
+<script>
+const UI = {
+  es: {
+    eyebrow: "Hoja de inspección · iPhone usado", title: "Revisión iPhone",
+    intro: "Marca cada punto como OK o Falla. Abre esta página en el iPhone que revisas para hacer las pruebas de pantalla táctil y píxeles desde el mismo equipo. El progreso se guarda en este navegador.",
+    checked: "Revisado", fails: "Fallas", pending: "Pendiente", approved: "Aprobado", fail1: "1 falla", failN: n => n + " fallas",
+    decTitle: "Estado según número de modelo",
+    decPath: "Ajustes › General › Información › toca «Modelo» hasta ver el número que termina en /A",
+    modelLabel: "Número de modelo",
+    decEmpty: ["Escribe el número de modelo", "La primera letra indica cómo se vendió el equipo."],
+    decUnknown: ["Prefijo no reconocido", "Copia el número que empieza con letra (ej. MQ9X3LL/A), no el que empieza con «A» seguido de 4 dígitos."],
+    region: "Región",
+    batTitle: "Batería", batPath: "Ajustes › Batería › Estado y carga (los ciclos aparecen en Ajustes › General › Información, iPhone 15 o más nuevo)",
+    health: "Capacidad máxima", cycles: "Ciclos de carga", cycUnit: "ciclos",
+    cycHint: "Apple calcula ~500 ciclos (hasta iPhone 14) o ~1000 (iPhone 15+) para llegar al 80 %.",
+    hNone: "Sin dato", hExc: "Excelente", hGood: "Buena", hFair: "Aceptable", hBad: "Cambiar batería",
+    cNone: "Sin dato", cLow: "Pocos ciclos", cMid: "Uso medio", cHigh: "Muy usada",
+    notesTitle: "Notas", notesLabel: "Observaciones (rayones, precio acordado, accesorios…)",
+    notesPh: "Ej. rayón leve en esquina inferior izquierda, incluye caja y cable",
+    sumTitle: "Resumen", sModel: "Modelo", sState: "Estado de venta", sBatt: "Batería", sRegion: "Región",
+    vGood: "✓ Aprobado: todo funciona", vFail: n => `✗ ${n} ${n === 1 ? "falla" : "fallas"}: revisar antes de comprar`, vPending: n => `Faltan ${n} puntos por revisar`,
+    copy: "Copiar reporte", reset: "Borrar todo", resetConfirm: "Toca otra vez para borrar",
+    copied: "Reporte copiado", copyFail: "Reporte seleccionado: cópialo manualmente",
+    start: "Iniciar prueba", exit: "Salir", tap: "toca para seguir", notesR: "Notas", reportTitle: "REVISIÓN iPHONE",
+    colors: ["Rojo", "Verde", "Azul", "Blanco", "Negro", "Gris"],
+    prefix: { M: ["Nuevo (venta retail)", "Vendido nuevo por Apple o un distribuidor. Es lo ideal."], F: ["Reacondicionado", "Reparado y revendido por Apple o un operador. Funciona bien pero no es de primera mano; debe costar menos."], N: ["Reemplazo", "Equipo que Apple entregó como cambio en garantía. Es normal, pero confirma que coincida con la caja."], P: ["Personalizado", "Comprado nuevo con grabado. Revisa que la parte trasera tenga el grabado."], "3": ["Demo de exhibición", "Unidad de tienda: muchas horas encendida y batería gastada. Debe costar bastante menos."] },
+    legend: { M: "Nuevo", F: "Reacondicionado", N: "Reemplazo (garantía)", P: "Personalizado (grabado)", "3": "Demo de exhibición" }
+  },
+  en: {
+    eyebrow: "Inspection sheet · Used iPhone", title: "iPhone Check",
+    intro: "Mark each point as OK or Fail. Open this page on the iPhone you are checking to run the touch and pixel tests on the device itself. Progress is saved in this browser.",
+    checked: "Checked", fails: "Fails", pending: "Pending", approved: "Passed", fail1: "1 fail", failN: n => n + " fails",
+    decTitle: "Status from model number",
+    decPath: "Settings › General › About › tap «Model Number» until you see the one ending in /A",
+    modelLabel: "Model number",
+    decEmpty: ["Enter the model number", "The first letter tells how the device was sold."],
+    decUnknown: ["Prefix not recognized", "Copy the number that starts with a letter (e.g. MQ9X3LL/A), not the one that starts with «A» plus 4 digits."],
+    region: "Region",
+    batTitle: "Battery", batPath: "Settings › Battery › Battery Health & Charging (cycle count is in Settings › General › About, iPhone 15 or newer)",
+    health: "Maximum capacity", cycles: "Charge cycles", cycUnit: "cycles",
+    cycHint: "Apple rates ~500 cycles (up to iPhone 14) or ~1000 (iPhone 15+) to reach 80 %.",
+    hNone: "No data", hExc: "Excellent", hGood: "Good", hFair: "Fair", hBad: "Replace battery",
+    cNone: "No data", cLow: "Low cycles", cMid: "Moderate use", cHigh: "Heavily used",
+    notesTitle: "Notes", notesLabel: "Remarks (scratches, agreed price, accessories…)",
+    notesPh: "E.g. light scratch on bottom-left corner, comes with box and cable",
+    sumTitle: "Summary", sModel: "Model", sState: "Sale status", sBatt: "Battery", sRegion: "Region",
+    vGood: "✓ Passed: everything works", vFail: n => `✗ ${n} ${n === 1 ? "fail" : "fails"}: review before buying`, vPending: n => `${n} points left to check`,
+    copy: "Copy report", reset: "Clear all", resetConfirm: "Tap again to clear",
+    copied: "Report copied", copyFail: "Report selected: copy it manually",
+    start: "Start test", exit: "Exit", tap: "tap to continue", notesR: "Notes", reportTitle: "iPHONE CHECK",
+    colors: ["Red", "Green", "Blue", "White", "Black", "Gray"],
+    prefix: { M: ["New (retail)", "Sold new by Apple or a reseller. This is the best case."], F: ["Refurbished", "Repaired and resold by Apple or a carrier. Works fine but is not first-hand; it should cost less."], N: ["Replacement", "Unit Apple gave as a warranty swap. Normal, but check that it matches the box."], P: ["Personalized", "Bought new with engraving. Check that the back has the engraving."], "3": ["Display demo", "Store unit: many hours powered on and a worn battery. It should cost much less."] },
+    legend: { M: "New", F: "Refurbished", N: "Replacement (warranty)", P: "Personalized (engraved)", "3": "Display demo" }
+  }
+};
+const LETTER_CLASS = { M: "M", F: "F", N: "N", P: "P", "3": "D" };
+const REGION = { "LL/A": ["EE. UU.", "USA"], "LZ/A": ["Chile / Paraguay / Uruguay", "Chile / Paraguay / Uruguay"], "BZ/A": ["Brasil", "Brazil"], "CH/A": ["China", "China"], "ZA/A": ["Singapur", "Singapore"], "ZP/A": ["Hong Kong / Macao", "Hong Kong / Macau"], "J/A": ["Japón", "Japan"], "B/A": ["Reino Unido", "United Kingdom"], "ZD/A": ["Europa", "Europe"], "C/A": ["Canadá", "Canada"], "VC/A": ["Canadá", "Canada"], "X/A": ["Australia", "Australia"] };
+
+const SECTIONS = [
+  { id: "id", es: "Identidad y bloqueos", en: "Identity and locks", items: [
+    { k: "prefix", es: ["Prefijo del modelo aceptable", "Revisa el decodificador de arriba: M nuevo, F reacondicionado, N reemplazo, P personalizado."], en: ["Model prefix acceptable", "See the decoder above: M new, F refurbished, N replacement, P personalized."] },
+    { k: "sim", es: ["Libre de operador", "Ajustes › General › Información › baja hasta «Bloqueo del operador»: debe decir «Sin restricciones de SIM»."], en: ["Carrier unlocked", "Settings › General › About › scroll to «Carrier Lock»: it must say «No SIM restrictions»."] },
+    { k: "icloud", es: ["iCloud y Buscar desactivados", "Ajustes › [nombre] › Buscar › Buscar mi iPhone en OFF. Si sigue con la cuenta del dueño anterior, no lo compres."], en: ["iCloud and Find My off", "Settings › [name] › Find My › Find My iPhone OFF. If it still has the previous owner's account, don't buy it."] },
+    { k: "imei", es: ["IMEI coincide", "Marca *#06# y compara con Ajustes › General › Información y con la caja o la bandeja SIM."], en: ["IMEI matches", "Dial *#06# and compare with Settings › General › About and with the box or SIM tray."] }
+  ]},
+  { id: "parts", es: "Piezas y batería", en: "Parts and battery", items: [
+    { k: "history", es: ["Sin piezas desconocidas", "Ajustes › General › Información › «Historial de piezas y servicio». «Pieza genuina de Apple» está bien; «Pieza desconocida» indica reparación no oficial."], en: ["No unknown parts", "Settings › General › About › «Parts and Service History». «Genuine Apple Part» is fine; «Unknown Part» means a non-official repair."] },
+    { k: "battery", es: ["Salud de batería 80 % o más", "Se marca sola al escribir la capacidad en el panel Batería."], en: ["Battery health 80 % or more", "Marked automatically when you enter the capacity in the Battery panel."] }
+  ]},
+  { id: "display", es: "Pantalla", en: "Display", items: [
+    { k: "touch", tool: "touch", es: ["Táctil 100 % funcional", "Pinta todos los cuadros con el dedo. Además, mantén presionada una app y arrástrala por toda la pantalla sin que se suelte."], en: ["Touch 100 % working", "Paint every square with your finger. Also long-press an app and drag it across the whole screen without it dropping."] },
+    { k: "pixels", tool: "colors", es: ["Sin píxeles muertos ni manchas", "Toca para pasar por rojo, verde, azul, blanco, negro y gris. Busca puntos, manchas amarillas o sombras."], en: ["No dead pixels or spots", "Tap through red, green, blue, white, black and gray. Look for dots, yellow spots or shadows."] },
+    { k: "truetone", es: ["True Tone se puede activar", "Abre el Centro de control, mantén presionado el brillo y activa True Tone. Si no aparece, la pantalla fue cambiada."], en: ["True Tone can be enabled", "Open Control Center, long-press brightness and turn on True Tone. If it's missing, the screen was replaced."] },
+    { k: "bright", es: ["Brillo y bordes", "Sube y baja el brillo al máximo. Revisa que no haya líneas, parpadeo ni bordes levantados."], en: ["Brightness and edges", "Move brightness to max and min. Check for lines, flicker or lifted edges."] }
+  ]},
+  { id: "faceid", es: "Face ID", en: "Face ID", items: [
+    { k: "faceset", es: ["Face ID se configura", "Ajustes › Face ID y código › Configurar Face ID. Si dice «Face ID no está disponible», está dañado."], en: ["Face ID sets up", "Settings › Face ID & Passcode › Set Up Face ID. If it says «Face ID is not available», it's damaged."] },
+    { k: "faceunlock", es: ["Desbloquea con la cara", "Bloquea el equipo y desbloquéalo mirándolo varias veces."], en: ["Unlocks with face", "Lock the device and unlock it by looking at it several times."] }
+  ]},
+  { id: "camera", es: "Cámaras", en: "Cameras", items: [
+    { k: "rear", es: ["Todas las lentes traseras", "En la app Cámara cambia entre 0.5×, 1×, 2× / 3× / 5×. Enfoca algo cercano y lejano; no debe vibrar ni sonar."], en: ["All rear lenses", "In the Camera app switch between 0.5×, 1×, 2× / 3× / 5×. Focus near and far; it must not shake or rattle."] },
+    { k: "front", es: ["Cámara frontal y retrato", "Toma una selfie normal y en modo Retrato."], en: ["Front camera and portrait", "Take a normal selfie and one in Portrait mode."] },
+    { k: "flash", es: ["Flash y linterna", "Enciende la linterna desde el Centro de control y toma una foto con flash."], en: ["Flash and flashlight", "Turn on the flashlight from Control Center and take a photo with flash."] },
+    { k: "video", es: ["Video con audio", "Graba un video corto con cada cámara y reprodúcelo: imagen estable y sonido claro."], en: ["Video with audio", "Record a short video with each camera and play it back: stable image and clear sound."] }
+  ]},
+  { id: "buttons", es: "Botones", en: "Buttons", items: [
+    { k: "vol", es: ["Volumen + y −", "Cada botón debe hacer clic firme y cambiar el volumen."], en: ["Volume + and −", "Each button must click firmly and change the volume."] },
+    { k: "power", es: ["Botón lateral", "Bloquea, desbloquea y doble clic para Apple Pay o Siri."], en: ["Side button", "Lock, unlock and double-click for Apple Pay or Siri."] },
+    { k: "switch", es: ["Interruptor de silencio o botón de Acción", "Cambia entre sonido y silencio; debe vibrar al cambiar."], en: ["Ring/Silent switch or Action button", "Toggle between ring and silent; it must vibrate when switching."] },
+    { k: "camctrl", es: ["Control de Cámara (iPhone 16 o más nuevo)", "Presiona y desliza el botón para abrir la cámara y hacer zoom. Marca OK si el modelo no lo tiene."], en: ["Camera Control (iPhone 16 or newer)", "Press and slide the button to open the camera and zoom. Mark OK if the model doesn't have it."] }
+  ]},
+  { id: "audio", es: "Sonido y vibración", en: "Sound and vibration", items: [
+    { k: "speakers", es: ["Altavoces arriba y abajo", "Reproduce música al máximo y tapa cada altavoz: deben sonar ambos sin distorsión."], en: ["Top and bottom speakers", "Play music at max volume and cover each speaker: both must play without distortion."] },
+    { k: "mic", es: ["Micrófonos", "Graba una nota de voz y un video con la cámara frontal; escucha que se oiga claro."], en: ["Microphones", "Record a voice memo and a front-camera video; check that it sounds clear."] },
+    { k: "ear", es: ["Auricular en llamada", "Haz una llamada y escucha con el equipo pegado a la oreja."], en: ["Earpiece on calls", "Make a call and listen with the phone against your ear."] },
+    { k: "vibe", es: ["Vibración", "Activa y desactiva el silencio o recibe una llamada."], en: ["Vibration", "Toggle silent mode or receive a call."] }
+  ]},
+  { id: "conn", es: "Conexión y sensores", en: "Connectivity and sensors", items: [
+    { k: "signal", es: ["SIM y señal", "Inserta una SIM: debe mostrar barras de señal y poder llamar y usar datos."], en: ["SIM and signal", "Insert a SIM: it must show signal bars and be able to call and use data."] },
+    { k: "wifi", es: ["Wi-Fi y Bluetooth", "Conéctate a una red y empareja un audífono o reloj."], en: ["Wi-Fi and Bluetooth", "Join a network and pair headphones or a watch."] },
+    { k: "charge", es: ["Carga por cable e inalámbrica", "Conecta el cable y pon el equipo en un cargador MagSafe o Qi: debe aparecer el rayo."], en: ["Wired and wireless charging", "Plug in the cable and place it on a MagSafe or Qi charger: the bolt must appear."] },
+    { k: "prox", es: ["Sensor de proximidad", "En una llamada, tapa la parte superior: la pantalla debe apagarse."], en: ["Proximity sensor", "During a call, cover the top: the screen must turn off."] },
+    { k: "gyro", es: ["Rotación y brillo automático", "Gira el equipo en una app con giro de pantalla y tapa el sensor para ver el ajuste de brillo."], en: ["Rotation and auto-brightness", "Rotate the phone in an app that rotates and cover the sensor to see brightness adjust."] }
+  ]}
+];
+
+const KEY = "revision-iphone-v1";
+let st = { s: {}, model: "", notes: "", lang: "es", health: "", cycles: "" };
+try { const raw = localStorage.getItem(KEY); if (raw) st = Object.assign(st, JSON.parse(raw)); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+
+const $ = id => document.getElementById(id);
+const T = () => UI[st.lang];
+const ALL = SECTIONS.flatMap(s => s.items);
+const total = ALL.length;
+
+function healthInfo() {
+  const h = parseInt(st.health, 10), t = T();
+  if (!h) return { cls: "none", label: t.hNone, h: 0 };
+  if (h >= 90) return { cls: "ok", label: t.hExc, h };
+  if (h >= 85) return { cls: "ok", label: t.hGood, h };
+  if (h >= 80) return { cls: "warn", label: t.hFair, h };
+  return { cls: "bad", label: t.hBad, h };
+}
+function cycleInfo() {
+  const c = st.cycles === "" ? NaN : parseInt(st.cycles, 10), t = T();
+  if (isNaN(c)) return { cls: "none", label: t.cNone };
+  if (c <= 300) return { cls: "ok", label: t.cLow };
+  if (c <= 600) return { cls: "warn", label: t.cMid };
+  return { cls: "bad", label: t.cHigh };
+}
+function battText() {
+  const hi = healthInfo(), ci = cycleInfo(), t = T();
+  const parts = [];
+  if (hi.h) parts.push(`${hi.h} % (${hi.label})`);
+  if (ci.cls !== "none") parts.push(`${st.cycles} ${t.cycUnit} (${ci.label})`);
+  return parts.join(" · ") || "—";
+}
+
+function renderSections() {
+  const t = T(), L = st.lang;
+  $("sections").innerHTML = SECTIONS.map(sec => `
+    <section class="block" aria-labelledby="h-${sec.id}">
+      <div class="block-head"><h2 id="h-${sec.id}">${sec[L]}</h2><span class="count" data-count="${sec.id}"></span></div>
+      <ul class="items">${sec.items.map(it => `
+        <li class="item" id="it-${it.k}">
+          <div><div class="t">${it[L][0]}</div><div class="h">${it[L][1]}</div></div>
+          <div class="seg" role="group" aria-label="${it[L][0]}">
+            <button class="ok" data-k="${it.k}" data-v="ok" aria-pressed="false">OK</button>
+            <button class="bad" data-k="${it.k}" data-v="bad" aria-pressed="false">${L === "es" ? "FALLA" : "FAIL"}</button>
+          </div>
+          ${it.tool ? `<div class="tools"><button class="btn" data-tool="${it.tool}">${t.start}</button></div>` : ""}
+        </li>`).join("")}
+      </ul>
+    </section>`).join("");
+}
+$("sections").addEventListener("click", e => {
+  const tool = e.target.closest("button[data-tool]");
+  if (tool) { tool.dataset.tool === "touch" ? startTouch() : startColors(); return; }
+  const b = e.target.closest("button[data-k]");
+  if (!b) return;
+  const { k, v } = b.dataset;
+  st.s[k] = st.s[k] === v ? undefined : v;
+  save(); update();
+});
+
+function applyLang() {
+  const t = T();
+  document.documentElement.lang = st.lang;
+  document.title = t.title;
+  document.querySelectorAll("[data-i]").forEach(el => { el.textContent = t[el.dataset.i]; });
+  $("lang-es").setAttribute("aria-pressed", String(st.lang === "es"));
+  $("lang-en").setAttribute("aria-pressed", String(st.lang === "en"));
+  $("notes").placeholder = t.notesPh;
+  $("legend").innerHTML = Object.entries(t.legend).map(([k, v]) => `<li><b>${k}</b>${v}</li>`).join("");
+  renderSections();
+  decode(); battery(); update();
+}
+$("lang-es").onclick = () => { st.lang = "es"; save(); applyLang(); };
+$("lang-en").onclick = () => { st.lang = "en"; save(); applyLang(); };
+
+function decode() {
+  const raw = st.model, r = $("result"), t = T();
+  if (!raw) { r.innerHTML = `<div class="letter X">?</div><div><strong>${t.decEmpty[0]}</strong><span class="muted">${t.decEmpty[1]}</span></div>`; return; }
+  const p = t.prefix[raw[0]];
+  if (!p) { r.innerHTML = `<div class="letter X">${raw[0]}</div><div><strong>${t.decUnknown[0]}</strong><span class="muted">${t.decUnknown[1]}</span></div>`; return; }
+  const reg = regionOf(raw);
+  r.innerHTML = `<div class="letter ${LETTER_CLASS[raw[0]]}">${raw[0]}</div><div><strong>${p[0]}</strong><span class="muted">${p[1]}${reg ? ` ${t.region} ${reg}.` : ""}</span></div>`;
+}
+function regionOf(raw) {
+  const k = Object.keys(REGION).sort((a, b) => b.length - a.length).find(s => raw.endsWith(s));
+  return k ? `${k} (${REGION[k][st.lang === "es" ? 0 : 1]})` : "";
+}
+
+function battery() {
+  const hi = healthInfo(), ci = cycleInfo();
+  $("hChip").className = "chip " + hi.cls; $("hChip").textContent = hi.label;
+  $("cChip").className = "chip " + ci.cls; $("cChip").textContent = ci.label;
+  const g = $("hGauge");
+  g.style.width = (hi.h || 0) + "%";
+  g.style.background = `var(--${hi.cls === "none" ? "line" : hi.cls})`;
+}
+
+function update() {
+  const t = T(), L = st.lang;
+  let ok = 0, bad = 0;
+  SECTIONS.forEach(sec => {
+    let d = 0;
+    sec.items.forEach(({ k }) => {
+      const v = st.s[k], li = $("it-" + k);
+      li.dataset.state = v || "";
+      li.querySelectorAll("button[data-v]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+      if (v) d++; if (v === "ok") ok++; if (v === "bad") bad++;
+    });
+    document.querySelector(`[data-count="${sec.id}"]`).textContent = `${d}/${sec.items.length}`;
+  });
+  const done = ok + bad;
+  $("sDone").textContent = `${done}/${total}`;
+  $("sOk").textContent = ok;
+  $("sBad").textContent = bad;
+  $("bar").style.width = (done / total * 100) + "%";
+  const v = $("verdict"), sv = $("sumVerdict");
+  if (bad) { v.className = "verdict fail"; v.textContent = bad === 1 ? t.fail1 : t.failN(bad); sv.className = "sum-verdict fail"; sv.textContent = t.vFail(bad); }
+  else if (done === total) { v.className = "verdict good"; v.textContent = t.approved; sv.className = "sum-verdict good"; sv.textContent = t.vGood; }
+  else { v.className = "verdict pending"; v.textContent = t.pending; sv.className = "sum-verdict pending"; sv.textContent = t.vPending(total - done); }
+
+  const p = st.model && t.prefix[st.model[0]];
+  const head = [[t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"], [t.sBatt, battText()]];
+  $("sumHead").innerHTML = head.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
+  $("sumList").innerHTML = SECTIONS.map(sec => `<div><h3>${sec[L]}</h3><ul>${sec.items.map(it => {
+    const s = st.s[it.k];
+    return `<li class="${s === "bad" ? "bad-row" : ""}"><span class="mk ${s || "none"}">${s === "ok" ? "✓" : s === "bad" ? "✗" : "–"}</span><span>${it[L][0]}</span></li>`;
+  }).join("")}</ul></div>`).join("");
+  $("report").value = report();
+}
+
+function report() {
+  const t = T(), L = st.lang;
+  const p = st.model && t.prefix[st.model[0]];
+  const lines = [t.reportTitle, `${t.sModel}: ${st.model || "—"}`];
+  if (p) lines.push(`${t.sState}: ${st.model[0]} · ${p[0]}`);
+  const reg = st.model && regionOf(st.model);
+  if (reg) lines.push(`${t.sRegion}: ${reg}`);
+  lines.push(`${t.sBatt}: ${battText()}`);
+  SECTIONS.forEach(sec => {
+    lines.push("", sec[L].toUpperCase());
+    sec.items.forEach(it => lines.push(`${st.s[it.k] === "ok" ? "✅" : st.s[it.k] === "bad" ? "❌" : "➖"} ${it[L][0]}`));
+  });
+  if (st.notes) lines.push("", `${t.notesR}: ${st.notes}`);
+  lines.push("", $("sumVerdict").textContent);
+  return lines.join("\n");
+}
+
+/* Prueba táctil */
+function startTouch() {
+  const g = $("grid");
+  const cols = 8, rows = Math.max(12, Math.round(cols * innerHeight / innerWidth));
+  g.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  g.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  g.innerHTML = "<div></div>".repeat(cols * rows);
+  g.hidden = false; $("gridInfo").hidden = false;
+  const n = cols * rows; let on = 0;
+  const hit = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    if (el && el.parentNode === g && !el.classList.contains("on")) {
+      el.classList.add("on"); on++;
+      $("gridCount").textContent = Math.floor(on / n * 100) + " %";
+      if (on === n) { st.s.touch = "ok"; save(); update(); setTimeout(stopTouch, 400); }
+    }
+  };
+  g.onpointerdown = e => { g.setPointerCapture(e.pointerId); hit(e.clientX, e.clientY); };
+  g.onpointermove = e => { if (e.buttons || e.pointerType === "touch") hit(e.clientX, e.clientY); };
+  $("gridCount").textContent = "0 %";
+}
+function stopTouch() { $("grid").hidden = true; $("gridInfo").hidden = true; $("grid").innerHTML = ""; }
+$("gridExit").onclick = stopTouch;
+
+/* Prueba de colores */
+const COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ffffff", "#000000", "#808080"];
+let ci = 0;
+function startColors() { ci = 0; showColor(); $("colors").hidden = false; }
+function showColor() { $("colors").style.background = COLORS[ci]; $("colorName").textContent = `${T().colors[ci]} · ${ci + 1}/${COLORS.length} · ${T().tap}`; }
+$("colors").onclick = () => { ci++; if (ci >= COLORS.length) $("colors").hidden = true; else showColor(); };
+
+/* Entradas */
+$("model").oninput = e => { st.model = e.target.value.trim().toUpperCase(); save(); decode(); update(); };
+$("notes").oninput = e => { st.notes = e.target.value; save(); update(); };
+const battInput = () => {
+  st.health = $("health").value; st.cycles = $("cycles").value;
+  const h = parseInt(st.health, 10);
+  if (h) st.s.battery = h >= 80 ? "ok" : "bad";
+  save(); battery(); update();
+};
+$("health").oninput = battInput;
+$("cycles").oninput = battInput;
+$("copy").onclick = async () => {
+  try { await navigator.clipboard.writeText(report()); $("toast").textContent = T().copied; }
+  catch (e) { $("report").select(); $("toast").textContent = T().copyFail; }
+};
+let armed = false;
+$("reset").onclick = () => {
+  if (!armed) { armed = true; $("reset").textContent = T().resetConfirm; setTimeout(() => { armed = false; $("reset").textContent = T().reset; }, 3000); return; }
+  st = { s: {}, model: "", notes: "", lang: st.lang, health: "", cycles: "" }; save();
+  ["model", "notes", "health", "cycles"].forEach(id => $(id).value = "");
+  armed = false; $("toast").textContent = "";
+  applyLang();
+};
+
+$("model").value = st.model;
+$("notes").value = st.notes;
+$("health").value = st.health;
+$("cycles").value = st.cycles;
+applyLang();
+</script>
+</body>
+</html>
