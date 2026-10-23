@@ -275,7 +275,6 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
     <div class="path" data-i="apPath"></div>
     <div><a class="btn solid" href="https://checkcoverage.apple.com" target="_blank" rel="noopener" data-i="apOpen"></a></div>
     <div class="fields">
-      <div class="field"><label for="serial" data-i="apSerial"></label><input class="txt mono-in" id="serial" autocomplete="off" spellcheck="false"></div>
       <div class="field"><label for="fullModel" data-i="apModel"></label><input class="txt" id="fullModel" autocomplete="off"></div>
       <div class="field">
         <label for="buyDate" data-i="apDate"></label>
@@ -527,7 +526,7 @@ const SECTIONS = [
 
 /* No se guarda ningún dato del chequeo; solo el idioma elegido */
 const LANG_KEY = "revision-iphone-lang";
-const EMPTY = () => ({ s: {}, model: "", notes: "", health: "", cycles: "", serial: "", fullModel: "", buyDate: "", dateKind: "buy" });
+const EMPTY = () => ({ s: {}, model: "", notes: "", health: "", cycles: "", fullModel: "", buyDate: "", dateKind: "buy" });
 let st = Object.assign(EMPTY(), { lang: "es" });
 try { const l = localStorage.getItem(LANG_KEY); if (l === "es" || l === "en") st.lang = l; } catch (e) {}
 const save = () => { try { localStorage.setItem(LANG_KEY, st.lang); } catch (e) {} };
@@ -573,18 +572,18 @@ function cycleInfo() {
 function ageInfo() {
   const t = T();
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(st.buyDate);
-  if (!m) return { cls: "none", label: t.ageNone, text: "" };
+  if (!m) return { cls: "none", text: "" };
   const p = new Date(+m[1] - (st.dateKind === "war" ? 1 : 0), +m[2] - 1, +m[3]);
   const now = new Date();
   let months = (now.getFullYear() - p.getFullYear()) * 12 + now.getMonth() - p.getMonth() - (now.getDate() < p.getDate() ? 1 : 0);
   months = Math.max(0, months);
   const y = Math.floor(months / 12), mo = months % 12;
-  const cls = months < 24 ? "ok" : months < 36 ? "warn" : "bad";
-  const tag = months < 12 ? t.ageNew : months < 24 ? t.ageMid : months < 36 ? t.ageOld : t.ageVeryOld;
+  /* Verde hasta 1,5 años, amarillo hasta 2,5 años, rojo después */
+  const cls = months < 18 ? "ok" : months <= 30 ? "warn" : "bad";
   const date = p.toLocaleDateString(st.lang === "es" ? "es-CO" : "en-US", { day: "numeric", month: "short", year: "numeric" });
   const est = st.dateKind === "war" ? ` (${t.estimated})` : "";
-  return { cls, label: `${t.age(y, mo)} · ${tag}`, text: `${date}${est} · ${t.age(y, mo)} (${tag})`, sentence: t.ageSentence(date, t.age(y, mo), est).toUpperCase(),
-    big: `${t.age(y, mo)} ${t.ofUse}`.toUpperCase(), sub: `${t.sDate}: ${date}${est} · ${tag}` };
+  return { cls, text: `${date}${est} · ${t.age(y, mo)}`, sentence: t.ageSentence(date, t.age(y, mo), est).toUpperCase(),
+    big: `${t.age(y, mo)} ${t.ofUse}`.toUpperCase(), sub: `${t.sDate}: ${date}${est}` };
 }
 function battText() {
   const hi = healthInfo(), ci = cycleInfo(), t = T();
@@ -643,7 +642,6 @@ function applyLang() {
   $("lang-es").setAttribute("aria-pressed", String(st.lang === "es"));
   $("lang-en").setAttribute("aria-pressed", String(st.lang === "en"));
   $("notes").placeholder = t.notesPh;
-  $("serial").placeholder = t.phSerial;
   $("fullModel").placeholder = t.phModel;
   $("waLink").href = "https://wa.me/17183149761?text=" + encodeURIComponent(t.waMsg);
   $("legend").innerHTML = Object.entries(t.legend).map(([k, v]) => `<li><b>${k}</b>${v}</li>`).join("");
@@ -708,7 +706,7 @@ function update() {
   $("sumAge").className = "sum-age " + ai.cls; $("sumAge").textContent = ai.sentence || "";
   $("dtBuy").setAttribute("aria-pressed", String(st.dateKind === "buy"));
   $("dtWar").setAttribute("aria-pressed", String(st.dateKind === "war"));
-  const head = [[t.sFull, st.fullModel || "—"], [t.sSerial, st.serial || "—"], [t.sDate, ai.text || "—"], [t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"], [t.sBatt, battText()]];
+  const head = [[t.sFull, st.fullModel || "—"], [t.sDate, ai.text || "—"], [t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"], [t.sBatt, battText()]];
   $("sumHead").innerHTML = head.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
   $("sumList").innerHTML = SECTIONS.map(sec => `<div><h3>${sec[L]}</h3><ul>${sec.items.map(it => {
     const s = st.s[it.k];
@@ -727,7 +725,6 @@ function report() {
   const ag = ageInfo();
   if (ag.sentence) lines.push(ag.sentence, "");
   if (st.fullModel) lines.push(`${t.sFull}: ${st.fullModel}`);
-  if (st.serial) lines.push(`${t.sSerial}: ${st.serial}`);
   const ai = ageInfo();
   if (ai.text) lines.push(`${t.sDate}: ${ai.text}`);
   lines.push(`${t.sModel}: ${st.model || "—"}`);
@@ -808,7 +805,6 @@ $("tmYes").onclick = () => { st.s.pixels = "bad"; $("tmAsk").hidden = true; upda
 /* Entradas */
 $("model").oninput = e => { st.model = e.target.value.trim().toUpperCase(); save(); decode(); update(); };
 $("notes").oninput = e => { st.notes = e.target.value; save(); update(); };
-$("serial").oninput = e => { st.serial = e.target.value.trim().toUpperCase(); update(); };
 $("fullModel").oninput = e => { st.fullModel = e.target.value.trim(); update(); };
 $("buyDate").oninput = $("buyDate").onchange = e => { st.buyDate = e.target.value; update(); };
 $("dtBuy").onclick = () => { st.dateKind = "buy"; update(); };
@@ -835,7 +831,7 @@ let armed = false;
 $("reset").onclick = () => {
   if (!armed) { armed = true; $("reset").textContent = T().resetConfirm; setTimeout(() => { armed = false; $("reset").textContent = T().reset; }, 3000); return; }
   st = Object.assign(EMPTY(), { lang: st.lang }); save();
-  ["model", "notes", "health", "cycles", "serial", "fullModel", "buyDate"].forEach(id => $(id).value = "");
+  ["model", "notes", "health", "cycles", "fullModel", "buyDate"].forEach(id => $(id).value = "");
   $("importNote").hidden = true;
   armed = false; $("toast").textContent = "";
   applyLang();
