@@ -298,7 +298,7 @@ footer .by a { color: var(--ink); }
     <div class="kv" id="cdList"></div>
     <div class="actions">
       <a class="btn solid" href="https://checkcoverage.apple.com" target="_blank" rel="noopener" data-i="apOpen"></a>
-      <a class="btn" href="https://www.stolenphonechecker.org/" target="_blank" rel="noopener" data-i="cdUs"></a>
+      <a class="btn" href="https://swappa.com/imei" target="_blank" rel="noopener" data-i="cdUs"></a>
       <a class="btn" href="https://www.imeicolombia.com.co/" target="_blank" rel="noopener" data-i="cdCo"></a>
     </div>
   </section>
@@ -583,7 +583,7 @@ const YT = "https://www.youtube.com/results?search_query=speaker+test+sound+ster
 const SECTIONS = [
   { id: "lock", n: 1, top: true, es: "Bloqueos y reportes", en: "Locks and reports", items: [
     { k: "icloud", es: ["iCloud y Buscar desactivados", "Ajustes › [nombre] › Buscar › Buscar mi iPhone en OFF. Si sigue con la cuenta del dueño anterior, no lo compres."], en: ["iCloud and Find My off", "Settings › [name] › Find My › Find My iPhone OFF. If it still has the previous owner's account, don't buy it."] },
-    { k: "stolen", links: true, es: ["Sin reportes de robo o pérdida", "Marca *#06# para ver el IMEI y búscalo en la consulta oficial de tu país. Debe salir limpio, sin reportes."], en: ["No theft or loss reports", "Dial *#06# to see the IMEI and look it up on your country's official checker. It must come back clean."] },
+    { k: "stolen", links: true, es: ["Sin reportes de robo o pérdida", "Marca *#06# para ver el IMEI y búscalo en una de estas consultas. Debe salir limpio, sin reportes."], en: ["No theft or loss reports", "Dial *#06# to see the IMEI and look it up on one of these checkers. It must come back clean."] },
     { k: "sim", es: ["Libre de operador", "Ajustes › General › Información › baja hasta «Bloqueo del operador»: debe decir «Sin restricciones de SIM»."], en: ["Carrier unlocked", "Settings › General › About › scroll to «Carrier Lock»: it must say «No SIM restrictions»."] },
     { k: "imei", es: ["IMEI coincide", "Compara el IMEI de *#06# con Ajustes › General › Información y con la caja o la bandeja SIM."], en: ["IMEI matches", "Compare the *#06# IMEI with Settings › General › About and with the box or SIM tray."] }
   ]},
@@ -637,7 +637,8 @@ const SECTIONS = [
   ]}
 ];
 const STOLEN_LINKS = [
-  ["https://www.stolenphonechecker.org/", { es: "Consulta EE. UU. (CTIA)", en: "US checker (CTIA)" }],
+  ["https://swappa.com/imei", { es: "Consulta EE. UU. (Swappa)", en: "US checker (Swappa)" }],
+  ["https://www.imei.info/", { es: "Consulta general (imei.info)", en: "General checker (imei.info)" }],
   ["https://www.imeicolombia.com.co/", { es: "Consulta Colombia (CRC)", en: "Colombia checker (CRC)" }]
 ];
 /* Preguntas del modo cliente. yn: ok cuando la respuesta es okIs; keys = puntos del checklist que llena. */
