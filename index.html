@@ -211,6 +211,20 @@ footer .by a { color: var(--ink); }
 .tm-res.ok { color: var(--ok); font-weight: 600; } .tm-res.bad { color: var(--bad); font-weight: 600; }
 .tm-ask { display: grid; gap: 10px; padding: 14px; border-radius: 3px; background: var(--warn-soft); }
 
+/* Modo cliente: preguntas guiadas */
+.cq { display: grid; gap: 8px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.cq:last-child { border-bottom: 0; }
+.cq .q { font-weight: 600; font-size: 1.02rem; }
+.cq .seg button { min-width: 72px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { font: 600 .85rem/1 var(--mono); padding: 10px 12px; min-height: 44px; border: 1.5px solid var(--line); border-radius: 3px; background: transparent; color: var(--ink); cursor: pointer; }
+.chips button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+.seg button[aria-pressed="true"].yn { background: var(--ink); color: var(--sheet); }
+.kv { display: grid; grid-template-columns: auto 1fr auto; gap: 8px 12px; align-items: center; }
+.kv span { font-weight: 600; }
+.kv b { font-family: var(--mono); word-break: break-all; }
+.remote { background: var(--accent-soft); border-color: var(--accent); }
+
 /* Pruebas a pantalla completa */
 .overlay { position: fixed; inset: 0; z-index: 50; touch-action: none; user-select: none; -webkit-user-select: none; }
 #grid { display: grid; background: #000; }
@@ -273,6 +287,30 @@ footer .by a { color: var(--ink); }
     <div id="verdict" class="verdict pending"></div>
     <div class="bar"><i id="bar"></i></div>
   </div>
+
+  <!-- Datos que mandó el cliente (solo al abrir un resultado) -->
+  <section class="panel" id="clientData" hidden aria-labelledby="cdH">
+    <h2 id="cdH" data-i="cdTitle"></h2>
+    <p class="muted" data-i="cdHint"></p>
+    <div class="kv" id="cdList"></div>
+    <div class="actions">
+      <a class="btn solid" href="https://checkcoverage.apple.com" target="_blank" rel="noopener" data-i="apOpen"></a>
+      <a class="btn" href="https://www.stolenphonechecker.org/" target="_blank" rel="noopener" data-i="cdUs"></a>
+      <a class="btn" href="https://www.imeicolombia.com.co/" target="_blank" rel="noopener" data-i="cdCo"></a>
+    </div>
+  </section>
+
+  <!-- Revisión a distancia: el cliente se revisa solo y manda el resultado -->
+  <section class="panel remote" aria-labelledby="remH">
+    <h2 id="remH" data-i="remTitle"></h2>
+    <p class="muted" data-i="remHint"></p>
+    <div class="field"><label for="ownerWa" data-i="remWa"></label><input class="txt" id="ownerWa" inputmode="tel" autocomplete="tel" placeholder="17183149761"></div>
+    <div class="actions">
+      <a class="btn send-wa" id="remSend" target="_blank" rel="noopener" data-i="remSend"></a>
+      <button class="btn solid" id="remQrBtn" data-i="remQr"></button>
+    </div>
+    <div class="qr" id="remQr" hidden></div>
+  </section>
 
   <!-- Paso 1: bloqueos (lo que tumba una compra) -->
   <div id="sectionsTop"></div>
@@ -375,10 +413,14 @@ footer .by a { color: var(--ink); }
 <div class="wrap" id="testMode" hidden>
   <header>
     <span class="eyebrow" data-i="tmEyebrow"></span>
-    <h1 data-i="tmTitle"></h1>
-    <p class="muted" data-i="tmIntro"></p>
+    <h1 id="tmH1"></h1>
+    <p class="muted" id="tmP"></p>
   </header>
+  <section class="panel" id="cmPanel" hidden>
+    <div id="cmQuestions"></div>
+  </section>
   <section class="panel">
+    <h2 id="tmTestsH" data-i="cmTests" hidden></h2>
     <div id="tmRows"></div>
     <div class="tm-ask" id="tmAsk" hidden>
       <strong id="tmAskQ"></strong>
@@ -389,6 +431,16 @@ footer .by a { color: var(--ink); }
     <h2 data-i="tmDoneTitle"></h2>
     <p class="muted" data-i="tmDoneHint"></p>
     <div class="qr" id="tmQr"></div>
+  </section>
+  <section class="panel" id="cmDone" hidden>
+    <h2 data-i="cmDoneTitle"></h2>
+    <p class="muted" data-i="cmDoneHint"></p>
+    <div class="actions">
+      <a class="btn send-wa" id="cmSendWa" target="_blank" rel="noopener" data-i="cmSendWa"></a>
+      <button class="btn solid" id="cmShare" data-i="share" hidden></button>
+      <button class="btn" id="cmQrBtn" data-i="cmQr"></button>
+    </div>
+    <div class="qr" id="cmQr" hidden></div>
   </section>
 </div>
 
@@ -445,6 +497,16 @@ const UI = {
     yt: "Video de prueba en YouTube",
     mic: { rec: "Grabando 4 segundos: habla cerca del celular…", play: "Reproduciendo la grabación…", done: "Listo", denied: "No se pudo usar el micrófono. Permite el acceso o prueba con la app Notas de voz." },
     doneMark: "Listo: marca OK o FALLA",
+    remTitle: "Revisión a distancia",
+    remHint: "Mándale este enlace al cliente o que escanee el QR con el iPhone que vende. Él responde unas preguntas mirando sus Ajustes, hace las pruebas y al final te envía el resultado. Tú lo abres y solo confirmas cada punto.",
+    remWa: "Tu WhatsApp para recibir el resultado (opcional, con código de país)", remSend: "Enviar enlace por WhatsApp", remQr: "Mostrar QR para el cliente",
+    remMsg: "Hola, para revisar tu iPhone abre este enlace en ese mismo iPhone y sigue los pasos (toma unos 5 minutos):",
+    cdTitle: "Datos enviados por el cliente", cdHint: "Ya quedaron cargados en el checklist. Confirma cada punto, pega el serial en Apple y el IMEI en la consulta de robo.",
+    cdSerial: "Número de serie", cdImei: "IMEI", cdStorage: "Capacidad", cdUs: "Robo: EE. UU.", cdCo: "Robo: Colombia", copyBtn: "Copiar", copiedBtn: "Copiado",
+    cmTitle: "Revisión de tu iPhone", cmIntro: "Responde las preguntas mirando los Ajustes de este iPhone y haz las pruebas. Al final toca «Enviar resultado por WhatsApp». No se guarda nada en este celular.",
+    cmTests: "Pruebas", cmDoneTitle: "Enviar resultado", cmDoneHint: "Toca el botón verde para mandar el resultado por WhatsApp, o muestra el QR para que lo escaneen.",
+    cmSendWa: "Enviar resultado por WhatsApp", cmQr: "Mostrar QR", cmMsg: "Resultado de la revisión de mi iPhone", cmOpen: "Resultado completo:",
+    yes: "Sí", no: "No",
     madeBy: "Hecho por", custom: "¿Quieres una página personalizada?", waMsg: "Hola, vi la página Revisión iPhone y quiero una página personalizada.",
     prefix: { M: ["Nuevo (venta retail)", "Vendido nuevo por Apple o un distribuidor. Es lo ideal."], F: ["Reacondicionado", "Reparado y revendido por Apple o un operador. Funciona bien pero no es de primera mano; debe costar menos."], N: ["Reemplazo", "Equipo que Apple entregó como cambio en garantía. Es normal, pero confirma que coincida con la caja."], P: ["Personalizado", "Comprado nuevo con grabado. Revisa que la parte trasera tenga el grabado."], "3": ["Demo de exhibición", "Unidad de tienda: muchas horas encendida y batería gastada. Debe costar bastante menos."] },
     legend: { M: "Nuevo", F: "Reacondicionado", N: "Reemplazo (garantía)", P: "Personalizado (grabado)", "3": "Demo de exhibición" }
@@ -495,6 +557,16 @@ const UI = {
     yt: "Test video on YouTube",
     mic: { rec: "Recording 4 seconds: speak close to the phone…", play: "Playing the recording…", done: "Done", denied: "Couldn't use the microphone. Allow access or try the Voice Memos app." },
     doneMark: "Done: mark OK or FAIL",
+    remTitle: "Remote check",
+    remHint: "Send this link to the client or have them scan the QR with the iPhone they are selling. They answer a few questions from their Settings, run the tests and send you the result. You open it and just confirm each point.",
+    remWa: "Your WhatsApp to receive the result (optional, with country code)", remSend: "Send link by WhatsApp", remQr: "Show QR for the client",
+    remMsg: "Hi, to check your iPhone open this link on that same iPhone and follow the steps (takes about 5 minutes):",
+    cdTitle: "Data sent by the client", cdHint: "It's already loaded into the checklist. Confirm each point, paste the serial at Apple and the IMEI in the theft checker.",
+    cdSerial: "Serial number", cdImei: "IMEI", cdStorage: "Capacity", cdUs: "Theft: USA", cdCo: "Theft: Colombia", copyBtn: "Copy", copiedBtn: "Copied",
+    cmTitle: "Your iPhone check", cmIntro: "Answer the questions by looking at this iPhone's Settings and run the tests. At the end tap «Send result by WhatsApp». Nothing is saved on this phone.",
+    cmTests: "Tests", cmDoneTitle: "Send result", cmDoneHint: "Tap the green button to send the result by WhatsApp, or show the QR so it can be scanned.",
+    cmSendWa: "Send result by WhatsApp", cmQr: "Show QR", cmMsg: "My iPhone check result", cmOpen: "Full result:",
+    yes: "Yes", no: "No",
     madeBy: "Made by", custom: "Want a custom page?", waMsg: "Hi, I saw the iPhone Check page and I'd like a custom page.",
     prefix: { M: ["New (retail)", "Sold new by Apple or a reseller. This is the best case."], F: ["Refurbished", "Repaired and resold by Apple or a carrier. Works fine but is not first-hand; it should cost less."], N: ["Replacement", "Unit Apple gave as a warranty swap. Normal, but check that it matches the box."], P: ["Personalized", "Bought new with engraving. Check that the back has the engraving."], "3": ["Display demo", "Store unit: many hours powered on and a worn battery. It should cost much less."] },
     legend: { M: "New", F: "Refurbished", N: "Replacement (warranty)", P: "Personalized (engraved)", "3": "Display demo" }
@@ -565,6 +637,20 @@ const STOLEN_LINKS = [
   ["https://www.stolenphonechecker.org/", { es: "Consulta EE. UU. (CTIA)", en: "US checker (CTIA)" }],
   ["https://www.imeicolombia.com.co/", { es: "Consulta Colombia (CRC)", en: "Colombia checker (CRC)" }]
 ];
+/* Preguntas del modo cliente. yn: ok cuando la respuesta es okIs; keys = puntos del checklist que llena. */
+const CLIENT_Q = [
+  { id: "model", type: "text", ph: "MQ9X3LL/A", es: ["Número de modelo", "Ajustes › General › Información › toca «Modelo» hasta que aparezca un número que termina en /A."], en: ["Model number", "Settings › General › About › tap «Model Number» until a number ending in /A appears."] },
+  { id: "serial", type: "text", es: ["Número de serie", "Ajustes › General › Información › Número de serie. Mantenlo presionado, copia y pega aquí."], en: ["Serial number", "Settings › General › About › Serial Number. Long-press, copy and paste here."] },
+  { id: "imei", type: "text", num: true, es: ["IMEI", "Marca *#06# en la app Teléfono, o mira Ajustes › General › Información › IMEI."], en: ["IMEI", "Dial *#06# in the Phone app, or see Settings › General › About › IMEI."] },
+  { id: "storage", type: "choice", opts: ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"], es: ["Capacidad", "Ajustes › General › Información › Capacidad."], en: ["Capacity", "Settings › General › About › Capacity."] },
+  { id: "health", type: "num", unit: "%", es: ["Salud de la batería", "Ajustes › Batería › Estado y carga › Capacidad máxima."], en: ["Battery health", "Settings › Battery › Battery Health & Charging › Maximum Capacity."] },
+  { id: "cycles", type: "num", es: ["Ciclos de carga (si aparece)", "iPhone 15 o más nuevo: Ajustes › General › Información › Recuento de ciclos. Si no aparece, déjalo vacío."], en: ["Charge cycles (if shown)", "iPhone 15 or newer: Settings › General › About › Cycle Count. Leave empty if it isn't shown."] },
+  { id: "sim", type: "yn", keys: ["sim"], okIs: "yes", es: ["¿Dice «Sin restricciones de SIM»?", "Ajustes › General › Información › baja hasta «Bloqueo del operador»."], en: ["Does it say «No SIM restrictions»?", "Settings › General › About › scroll to «Carrier Lock»."] },
+  { id: "findmy", type: "yn", keys: ["icloud"], okIs: "no", es: ["¿Está activado Buscar mi iPhone?", "Ajustes › [tu nombre] › Buscar › Buscar mi iPhone."], en: ["Is Find My iPhone turned on?", "Settings › [your name] › Find My › Find My iPhone."] },
+  { id: "parts", type: "yn", keys: ["notorig", "history"], okIs: "no", es: ["¿Aparece alguna pieza «desconocida» o «no original»?", "Ajustes › General › Información › Historial de piezas y servicio, y Ajustes › Batería."], en: ["Is any part shown as «unknown» or non-genuine?", "Settings › General › About › Parts and Service History, and Settings › Battery."] },
+  { id: "truetone", type: "yn", keys: ["truetone"], okIs: "yes", es: ["¿Aparece True Tone y se puede activar?", "Abre el Centro de control y mantén presionado el brillo."], en: ["Does True Tone appear and turn on?", "Open Control Center and long-press brightness."] },
+  { id: "face", type: "yn", keys: ["faceunlock"], okIs: "yes", es: ["¿Face ID desbloquea el teléfono?", "Bloquea el teléfono y desbloquéalo mirándolo."], en: ["Does Face ID unlock the phone?", "Lock the phone and unlock it by looking at it."] }
+];
 const GRADE_PARTS = ["screen", "frame", "back"];
 const TESTS = ["touch", "pixels", "speakers", "mic"];
 const TOOL_OF = { touch: "touch", pixels: "colors", speakers: "speaker", mic: "mic" };
@@ -580,12 +666,33 @@ const save = () => { try { localStorage.setItem(LANG_KEY, st.lang); } catch (e) 
 const SITE = "https://johannbarajas.github.io/CHECK_PHONE/";
 const BASE = location.hostname.endsWith("github.io") ? location.origin + location.pathname : SITE;
 const params = new URLSearchParams(location.search);
-const TEST_MODE = params.get("modo") === "pantalla";
-const ONLY = TESTS.includes(params.get("prueba")) ? params.get("prueba") : "";
+const CLIENT_MODE = params.get("modo") === "cliente";
+const TEST_MODE = params.get("modo") === "pantalla" || CLIENT_MODE;
+const ONLY = !CLIENT_MODE && TESTS.includes(params.get("prueba")) ? params.get("prueba") : "";
 const NEEDED = ONLY ? [ONLY] : TESTS;
+const OWNER_WA = (params.get("wa") || "").replace(/\D/g, "").slice(0, 15);
 if (params.get("lang") === "es" || params.get("lang") === "en") st.lang = params.get("lang");
 let imported = false;
 TESTS.forEach(k => { const v = params.get(k); if (v === "ok" || v === "bad") { st.s[k] = v; imported = true; } });
+
+/* Resultado del modo cliente: JSON en base64url dentro de ?d= */
+const b64e = o => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const b64d = s => { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; return JSON.parse(decodeURIComponent(escape(atob(s)))); };
+const clip = (v, n) => String(v == null ? "" : v).slice(0, n);
+let client = null;
+if (params.get("d")) {
+  try {
+    const d = b64d(params.get("d"));
+    client = { m: clip(d.m, 20).toUpperCase(), sn: clip(d.sn, 20).toUpperCase(), im: clip(d.im, 20), sto: clip(d.sto, 10), h: clip(parseInt(d.h, 10) || "", 3), c: clip(parseInt(d.c, 10) >= 0 ? parseInt(d.c, 10) : "", 5) };
+    st.model = client.m; st.health = String(client.h); st.cycles = String(client.c);
+    Object.entries(d.s || {}).forEach(([k, v]) => { if (/^[a-z]{2,12}$/.test(k) && (v === "ok" || v === "bad")) st.s[k] = v; });
+    const h = parseInt(st.health, 10);
+    if (h) st.s.battery = h >= 80 ? "ok" : "bad";
+    imported = true;
+  } catch (e) { client = null; }
+}
+let cs = {};
+const OWNER_KEY = "revision-iphone-wa";
 function drawQr(el, text) {
   el.innerHTML = "";
   if (window.QRCode) new QRCode(el, { text, width: 440, height: 440, correctLevel: QRCode.CorrectLevel.M });
@@ -722,7 +829,13 @@ function applyLang() {
   $("legend").innerHTML = Object.entries(t.legend).map(([k, v]) => `<li><b>${k}</b>${v}</li>`).join("");
   renderSections(); renderGrades();
   decode(); battery(); update();
-  if (TEST_MODE) renderTestMode();
+  remoteRefresh(); renderClientData();
+  if (TEST_MODE) {
+    $("tmH1").textContent = CLIENT_MODE ? t.cmTitle : t.tmTitle;
+    $("tmP").textContent = CLIENT_MODE ? t.cmIntro : t.tmIntro;
+    if (CLIENT_MODE) renderClient();
+    renderTestMode();
+  }
 }
 $("lang-es").onclick = () => { st.lang = "es"; save(); applyLang(); };
 $("lang-en").onclick = () => { st.lang = "en"; save(); applyLang(); };
@@ -953,6 +1066,7 @@ function renderTestMode() {
       ${k === "speakers" ? `<a class="btn ghost" href="${YT}" target="_blank" rel="noopener">${t.yt}</a>` : ""}
     </div>`;
   }).join("");
+  if (CLIENT_MODE) { clientRefresh(); return; }
   if (NEEDED.every(k => st.s[k])) {
     $("tmDone").hidden = false;
     drawQr($("tmQr"), `${BASE}?${NEEDED.map(k => `${k}=${st.s[k]}`).join("&")}&lang=${st.lang}`);
@@ -962,6 +1076,97 @@ $("tmRows").addEventListener("click", e => {
   const b = e.target.closest("button[data-tm]");
   if (b) { $("tmAsk").hidden = true; runTool(b.dataset.tm); }
 });
+
+/* Modo cliente: preguntas, resumen y envío */
+function renderClient() {
+  const t = T(), L = st.lang;
+  $("cmQuestions").innerHTML = CLIENT_Q.map(q => {
+    let ctl = "";
+    if (q.type === "text") ctl = `<input class="txt" data-cq="${q.id}" autocomplete="off" spellcheck="false" ${q.num ? 'inputmode="numeric"' : ""} placeholder="${q.ph || ""}">`;
+    if (q.type === "num") ctl = `<input class="txt" data-cq="${q.id}" type="number" inputmode="numeric" min="0" placeholder="${q.unit || ""}">`;
+    if (q.type === "choice") ctl = `<div class="chips">${q.opts.map(o => `<button data-cq="${q.id}" data-a="${o}" aria-pressed="false">${o}</button>`).join("")}</div>`;
+    if (q.type === "yn") ctl = `<div class="seg" role="group" aria-label="${q[L][0]}"><button class="yn" data-cq="${q.id}" data-a="yes" aria-pressed="false">${t.yes}</button><button class="yn" data-cq="${q.id}" data-a="no" aria-pressed="false">${t.no}</button></div>`;
+    return `<div class="cq"><div class="q">${q[L][0]}</div><div class="path">${q[L][1]}</div>${ctl}</div>`;
+  }).join("");
+  $("cmQuestions").querySelectorAll("input[data-cq]").forEach(el => { el.value = cs[el.dataset.cq] || ""; });
+  clientRefresh();
+}
+$("cmQuestions").addEventListener("input", e => {
+  const el = e.target.closest("input[data-cq]");
+  if (el) { cs[el.dataset.cq] = el.value.trim(); clientRefresh(); }
+});
+$("cmQuestions").addEventListener("click", e => {
+  const b = e.target.closest("button[data-cq]");
+  if (!b) return;
+  const id = b.dataset.cq;
+  cs[id] = cs[id] === b.dataset.a ? "" : b.dataset.a;
+  clientRefresh();
+});
+function clientPayload() {
+  const s = {};
+  CLIENT_Q.filter(q => q.type === "yn" && cs[q.id]).forEach(q => q.keys.forEach(k => { s[k] = cs[q.id] === q.okIs ? "ok" : "bad"; }));
+  TESTS.forEach(k => { if (st.s[k]) s[k] = st.s[k]; });
+  return { m: cs.model || "", sn: cs.serial || "", im: cs.imei || "", sto: cs.storage || "", h: cs.health || "", c: cs.cycles || "", s };
+}
+function clientText(link) {
+  const t = T(), p = clientPayload(), L = st.lang;
+  const lines = [t.cmMsg.toUpperCase(), ""];
+  if (p.m) lines.push(`${t.sModel}: ${p.m}`);
+  if (p.sto) lines.push(`${t.cdStorage}: ${p.sto}`);
+  if (p.h) lines.push(`${t.sBatt}: ${p.h} %${p.c ? ` · ${p.c} ${t.cycUnit}` : ""}`);
+  lines.push("");
+  CLIENT_Q.filter(q => q.type === "yn" && cs[q.id]).forEach(q => lines.push(`${cs[q.id] === q.okIs ? "✅" : "❌"} ${q[L][0]} ${cs[q.id] === "yes" ? t.yes : t.no}`));
+  TESTS.forEach(k => { if (st.s[k]) lines.push(`${st.s[k] === "ok" ? "✅" : "❌"} ${itemName(k)}`); });
+  lines.push("", t.cmOpen, link);
+  return lines.join("\n");
+}
+function clientRefresh() {
+  $("cmQuestions").querySelectorAll("button[data-cq]").forEach(b => b.setAttribute("aria-pressed", String(cs[b.dataset.cq] === b.dataset.a)));
+  const link = `${BASE}?d=${b64e(clientPayload())}&lang=${st.lang}`;
+  $("cmSendWa").href = `https://wa.me/${OWNER_WA}?text=${encodeURIComponent(clientText(link))}`;
+  if (!$("cmQr").hidden) drawQr($("cmQr"), link);
+}
+$("cmQrBtn").onclick = () => {
+  const box = $("cmQr");
+  box.hidden = !box.hidden;
+  if (!box.hidden) drawQr(box, `${BASE}?d=${b64e(clientPayload())}&lang=${st.lang}`);
+};
+if (navigator.share) {
+  $("cmShare").hidden = false;
+  $("cmShare").onclick = async () => {
+    const link = `${BASE}?d=${b64e(clientPayload())}&lang=${st.lang}`;
+    try { await navigator.share({ title: T().cmMsg, text: clientText(link) }); } catch (e) {}
+  };
+}
+
+/* Revisión a distancia (en tu celular) y datos recibidos del cliente */
+let ownerWa = "";
+try { ownerWa = localStorage.getItem(OWNER_KEY) || ""; } catch (e) {}
+$("ownerWa").value = ownerWa;
+function clientLink() { return `${BASE}?modo=cliente&lang=${st.lang}${ownerWa ? `&wa=${ownerWa}` : ""}`; }
+function remoteRefresh() {
+  $("remSend").href = "https://wa.me/?text=" + encodeURIComponent(`${T().remMsg}\n${clientLink()}`);
+  if (!$("remQr").hidden) drawQr($("remQr"), clientLink());
+}
+$("ownerWa").oninput = e => {
+  ownerWa = e.target.value.replace(/\D/g, "").slice(0, 15);
+  try { localStorage.setItem(OWNER_KEY, ownerWa); } catch (err) {}
+  remoteRefresh();
+};
+$("remQrBtn").onclick = () => { $("remQr").hidden = !$("remQr").hidden; remoteRefresh(); };
+function renderClientData() {
+  if (!client) return;
+  const t = T();
+  const rows = [[t.cdSerial, client.sn], [t.cdImei, client.im], [t.cdStorage, client.sto]].filter(r => r[1]);
+  $("cdList").innerHTML = rows.map((r, i) => `<span>${r[0]}</span><b data-v="${i}"></b>${i < 2 ? `<button class="btn ghost" data-copy="${i}">${t.copyBtn}</button>` : "<i></i>"}`).join("");
+  $("cdList").querySelectorAll("b[data-v]").forEach(el => { el.textContent = rows[+el.dataset.v][1]; });
+  $("cdList").onclick = async e => {
+    const b = e.target.closest("button[data-copy]");
+    if (!b) return;
+    try { await navigator.clipboard.writeText(rows[+b.dataset.copy][1]); b.textContent = t.copiedBtn; } catch (err) {}
+  };
+  $("clientData").hidden = false;
+}
 
 /* Entradas */
 $("model").oninput = e => { st.model = e.target.value.trim().toUpperCase(); decode(); update(); };
@@ -995,10 +1200,15 @@ $("reset").onclick = () => {
   st = Object.assign(EMPTY(), { lang: st.lang });
   ["model", "notes", "health", "cycles", "fullModel", "buyDate", "price"].forEach(id => $(id).value = "");
   armed = false; $("toast").textContent = ""; $("importNote").hidden = true;
+  client = null; $("clientData").hidden = true;
   applyLang();
 };
 
 if (TEST_MODE) { $("main").hidden = true; $("testMode").hidden = false; }
+if (CLIENT_MODE) { $("cmPanel").hidden = false; $("tmTestsH").hidden = false; $("cmDone").hidden = false; }
+$("model").value = st.model;
+$("health").value = st.health;
+$("cycles").value = st.cycles;
 $("importNote").hidden = !imported;
 applyLang();
 </script>
