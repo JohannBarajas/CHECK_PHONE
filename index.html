@@ -120,9 +120,19 @@ input.big:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px;
 .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 14px; font-size: .85rem; margin: 0; padding: 0; list-style: none; }
 .legend b { font-family: var(--mono); color: var(--accent); margin-right: 6px; }
 
+/* Apple: serial, modelo y fecha */
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.field { display: grid; gap: 6px; align-content: start; }
+input.txt { font: 500 16px/1.3 var(--body); width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); }
+input.txt.mono-in { font-family: var(--mono); letter-spacing: .05em; text-transform: uppercase; }
+input.txt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+
+/* Bloque QR dentro de Pantalla */
+.qr-block { display: grid; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); background: var(--accent-soft); }
+.qr-block p { margin: 0; font-size: .9rem; }
+
 /* Batería */
 .batt { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.batt .field { display: grid; gap: 6px; }
 .unit { position: relative; }
 .unit input { padding-right: 70px; }
 .unit em { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font: 600 .9rem var(--mono); font-style: normal; color: var(--muted); pointer-events: none; }
@@ -178,7 +188,7 @@ li.bad-row { color: var(--bad); font-weight: 600; }
 .sum-verdict { font: 700 1.6rem/1.1 var(--display); text-transform: uppercase; padding-top: 12px; border-top: 1px dashed var(--line); }
 .sum-verdict.good { color: var(--ok); } .sum-verdict.fail { color: var(--bad); } .sum-verdict.pending { color: var(--muted); }
 
-textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); resize: vertical; }
+textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); resize: vertical; }
 #report { font-family: var(--mono); font-size: 12.5px; min-height: 180px; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 #toast { font-size: .85rem; color: var(--ok); }
@@ -193,9 +203,30 @@ textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 
 #colors { display: grid; place-items: end center; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); }
 #colors span { font: 600 12px var(--mono); padding: 6px 10px; background: rgba(127,127,127,.5); color: #fff; border-radius: 2px; }
 
-@media (max-width: 520px) {
+.seg button { min-height: 42px; }
+
+/* Celular: etiqueta de progreso fija arriba, botones grandes a todo el ancho */
+@media (max-width: 640px) {
+  body { padding-block: 14px 48px; font-size: 16px; }
+  .wrap { gap: 16px; }
   h1 { font-size: 2.1rem; }
-  .tag, .result, .batt { grid-template-columns: 1fr; }
+  h2 { font-size: 1.3rem; }
+  .result, .batt { grid-template-columns: 1fr; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+  .tag { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; padding: 10px 12px; gap: 8px 10px; box-shadow: 0 6px 14px -10px rgba(0,0,0,.4); }
+  .tag .stats { gap: 14px; }
+  .stat b { font-size: 1.35rem; }
+  .stat span { font-size: .62rem; }
+  .verdict { font-size: .95rem; padding: 8px 10px; }
+  .panel { padding: 14px; }
+  .block-head { padding: 14px 14px 8px; }
+  li.item { grid-template-columns: 1fr; padding: 12px 14px; }
+  li.item .seg { width: 100%; }
+  li.item .seg button { flex: 1; min-height: 48px; font-size: .9rem; }
+  .item .tools .btn { flex: 1; min-height: 44px; }
+  .qr-block { padding: 14px; }
+  .actions .btn { flex: 1 1 calc(50% - 10px); text-align: center; min-height: 46px; }
+  footer { flex-direction: column; align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { .bar i, .gauge i { transition: none; } }
 </style>
@@ -226,6 +257,18 @@ textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 
     <div class="bar"><i id="bar"></i></div>
   </div>
 
+  <section class="panel" aria-labelledby="appleH">
+    <h2 id="appleH" data-i="apTitle"></h2>
+    <div class="path" data-i="apPath"></div>
+    <div><a class="btn solid" href="https://checkcoverage.apple.com" target="_blank" rel="noopener" data-i="apOpen"></a></div>
+    <div class="fields">
+      <div class="field"><label for="serial" data-i="apSerial"></label><input class="txt mono-in" id="serial" autocomplete="off" spellcheck="false"></div>
+      <div class="field"><label for="fullModel" data-i="apModel"></label><input class="txt" id="fullModel" autocomplete="off"></div>
+      <div class="field"><label for="buyDate" data-i="apDate"></label><input class="txt" id="buyDate" autocomplete="off"></div>
+    </div>
+    <div class="path" data-i="apHint"></div>
+  </section>
+
   <div class="duo">
   <section class="panel" aria-labelledby="decH">
     <h2 id="decH" data-i="decTitle"></h2>
@@ -255,13 +298,6 @@ textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 
     </div>
   </section>
   </div>
-
-  <section class="panel" aria-labelledby="qrH">
-    <h2 id="qrH" data-i="qrTitle"></h2>
-    <p class="muted" style="margin:0" data-i="qrIntro"></p>
-    <div><button class="btn solid" id="qrBtn" data-i="qrShow"></button></div>
-    <div class="qr" id="qrBox" hidden></div>
-  </section>
 
   <div id="sections"></div>
 
@@ -347,8 +383,13 @@ const UI = {
     share: "Compartir…", sendWa: "Enviar por WhatsApp", sendMail: "Enviar por correo", mailSubject: "Reporte revisión iPhone",
     copied: "Reporte copiado", copyFail: "Reporte seleccionado: cópialo manualmente",
     start: "Iniciar prueba", exit: "Salir", tap: "toca para seguir", notesR: "Notas", reportTitle: "REVISIÓN iPHONE",
-    qrTitle: "Pantalla desde otro celular",
-    qrIntro: "Si llevas el checklist en tu celular, escanea este código con la cámara del iPhone que revisas. Ahí se hacen la prueba táctil y la de colores, y al final aparece otro código para escanear de vuelta con tu celular. Hazlo al inicio, porque el resultado se abre en una página nueva.",
+    qrTitle: "Prueba en el celular del cliente",
+    qrIntro: "Muestra este código al cliente. Lo escanea con la cámara de su iPhone y ahí hace la prueba táctil y la de colores. Al final su pantalla muestra el resultado y otro código para escanear de vuelta con tu celular. Hazlo al inicio, porque ese resultado se abre en una página nueva.",
+    apTitle: "Modelo y fecha de compra (Apple)", apPath: "Ajustes › General › Información › Número de serie (mantenlo presionado para copiarlo)",
+    apOpen: "Abrir checkcoverage.apple.com", apSerial: "Número de serie", apModel: "Modelo completo que muestra Apple", apDate: "Fecha de compra o fin de garantía",
+    apHint: "Pega el serial en la página de Apple y anota el modelo y la fecha. Si solo muestra cuándo termina la garantía, la compra fue más o menos 1 año antes. «Fecha de compra no validada» quiere decir que Apple no tiene registro de la venta.",
+    phSerial: "Ej. DNQXXXXXXXXX", phModel: "Ej. iPhone 14 Pro 128 GB", phDate: "Ej. garantía hasta 15/03/2026",
+    sSerial: "Serial", sFull: "Modelo (Apple)", sDate: "Compra / garantía",
     qrShow: "Mostrar código QR", imported: "✓ Resultado de pantalla cargado desde el otro celular",
     tmEyebrow: "Modo prueba de pantalla", tmTitle: "Prueba de pantalla",
     tmIntro: "Haz las dos pruebas en este celular. Al terminar aparece un código QR para escanear con el celular que lleva el checklist.",
@@ -383,8 +424,13 @@ const UI = {
     share: "Share…", sendWa: "Send by WhatsApp", sendMail: "Send by email", mailSubject: "iPhone check report",
     copied: "Report copied", copyFail: "Report selected: copy it manually",
     start: "Start test", exit: "Exit", tap: "tap to continue", notesR: "Notes", reportTitle: "iPHONE CHECK",
-    qrTitle: "Screen test from another phone",
-    qrIntro: "If you carry the checklist on your phone, scan this code with the camera of the iPhone you are checking. The touch and color tests run there, and at the end another code appears to scan back with your phone. Do it first, because the result opens in a new page.",
+    qrTitle: "Test on the client's phone",
+    qrIntro: "Show this code to the client. They scan it with their iPhone camera and run the touch and color tests there. At the end their screen shows the result and another code to scan back with your phone. Do it first, because that result opens in a new page.",
+    apTitle: "Model and purchase date (Apple)", apPath: "Settings › General › About › Serial Number (long-press to copy it)",
+    apOpen: "Open checkcoverage.apple.com", apSerial: "Serial number", apModel: "Full model shown by Apple", apDate: "Purchase date or warranty end",
+    apHint: "Paste the serial on Apple's page and write down the model and date. If it only shows when the warranty ends, it was bought about 1 year earlier. «Purchase date not validated» means Apple has no record of the sale.",
+    phSerial: "E.g. DNQXXXXXXXXX", phModel: "E.g. iPhone 14 Pro 128 GB", phDate: "E.g. warranty until 03/15/2026",
+    sSerial: "Serial", sFull: "Model (Apple)", sDate: "Purchase / warranty",
     qrShow: "Show QR code", imported: "✓ Screen result loaded from the other phone",
     tmEyebrow: "Screen test mode", tmTitle: "Screen test",
     tmIntro: "Run both tests on this phone. When done, a QR code appears to scan with the phone that has the checklist.",
@@ -402,6 +448,7 @@ const REGION = { "LL/A": ["EE. UU.", "USA"], "LZ/A": ["Chile / Paraguay / Urugua
 
 const SECTIONS = [
   { id: "id", es: "Identidad y bloqueos", en: "Identity and locks", items: [
+    { k: "apple", es: ["Serial válido en Apple", "En checkcoverage.apple.com (panel de arriba) el modelo que aparece debe ser el mismo del teléfono."], en: ["Serial valid at Apple", "On checkcoverage.apple.com (panel above) the model shown must match the phone."] },
     { k: "prefix", es: ["Prefijo del modelo aceptable", "Revisa el decodificador de arriba: M nuevo, F reacondicionado, N reemplazo, P personalizado."], en: ["Model prefix acceptable", "See the decoder above: M new, F refurbished, N replacement, P personalized."] },
     { k: "sim", es: ["Libre de operador", "Ajustes › General › Información › baja hasta «Bloqueo del operador»: debe decir «Sin restricciones de SIM»."], en: ["Carrier unlocked", "Settings › General › About › scroll to «Carrier Lock»: it must say «No SIM restrictions»."] },
     { k: "icloud", es: ["iCloud y Buscar desactivados", "Ajustes › [nombre] › Buscar › Buscar mi iPhone en OFF. Si sigue con la cuenta del dueño anterior, no lo compres."], en: ["iCloud and Find My off", "Settings › [name] › Find My › Find My iPhone OFF. If it still has the previous owner's account, don't buy it."] },
@@ -450,7 +497,8 @@ const SECTIONS = [
 
 /* No se guarda ningún dato del chequeo; solo el idioma elegido */
 const LANG_KEY = "revision-iphone-lang";
-let st = { s: {}, model: "", notes: "", lang: "es", health: "", cycles: "" };
+const EMPTY = () => ({ s: {}, model: "", notes: "", health: "", cycles: "", serial: "", fullModel: "", buyDate: "" });
+let st = Object.assign(EMPTY(), { lang: "es" });
 try { const l = localStorage.getItem(LANG_KEY); if (l === "es" || l === "en") st.lang = l; } catch (e) {}
 const save = () => { try { localStorage.setItem(LANG_KEY, st.lang); } catch (e) {} };
 
@@ -502,6 +550,12 @@ function renderSections() {
   $("sections").innerHTML = SECTIONS.map(sec => `
     <section class="block" aria-labelledby="h-${sec.id}">
       <div class="block-head"><h2 id="h-${sec.id}">${sec[L]}</h2><span class="count" data-count="${sec.id}"></span></div>
+      ${sec.id === "display" ? `<div class="qr-block">
+        <strong>${t.qrTitle}</strong>
+        <p class="muted">${t.qrIntro}</p>
+        <div><button class="btn solid" id="qrBtn">${t.qrShow}</button></div>
+        <div class="qr" id="qrBox" hidden></div>
+      </div>` : ""}
       <ul class="items">${sec.items.map(it => `
         <li class="item" id="it-${it.k}">
           <div><div class="t">${it[L][0]}</div><div class="h">${it[L][1]}</div></div>
@@ -515,6 +569,7 @@ function renderSections() {
     </section>`).join("");
 }
 $("sections").addEventListener("click", e => {
+  if (e.target.closest("#qrBtn")) { drawQr($("qrBox"), `${BASE}?modo=pantalla&lang=${st.lang}`); return; }
   const tool = e.target.closest("button[data-tool]");
   if (tool) { tool.dataset.tool === "touch" ? startTouch() : startColors(); return; }
   const b = e.target.closest("button[data-k]");
@@ -532,6 +587,9 @@ function applyLang() {
   $("lang-es").setAttribute("aria-pressed", String(st.lang === "es"));
   $("lang-en").setAttribute("aria-pressed", String(st.lang === "en"));
   $("notes").placeholder = t.notesPh;
+  $("serial").placeholder = t.phSerial;
+  $("fullModel").placeholder = t.phModel;
+  $("buyDate").placeholder = t.phDate;
   $("waLink").href = "https://wa.me/17183149761?text=" + encodeURIComponent(t.waMsg);
   $("legend").innerHTML = Object.entries(t.legend).map(([k, v]) => `<li><b>${k}</b>${v}</li>`).join("");
   renderSections();
@@ -586,7 +644,7 @@ function update() {
   else { v.className = "verdict pending"; v.textContent = t.pending; sv.className = "sum-verdict pending"; sv.textContent = t.vPending(total - done); }
 
   const p = st.model && t.prefix[st.model[0]];
-  const head = [[t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"], [t.sBatt, battText()]];
+  const head = [[t.sFull, st.fullModel || "—"], [t.sSerial, st.serial || "—"], [t.sDate, st.buyDate || "—"], [t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"], [t.sBatt, battText()]];
   $("sumHead").innerHTML = head.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
   $("sumList").innerHTML = SECTIONS.map(sec => `<div><h3>${sec[L]}</h3><ul>${sec.items.map(it => {
     const s = st.s[it.k];
@@ -601,7 +659,11 @@ function update() {
 function report() {
   const t = T(), L = st.lang;
   const p = st.model && t.prefix[st.model[0]];
-  const lines = [t.reportTitle, `${t.sModel}: ${st.model || "—"}`];
+  const lines = [t.reportTitle];
+  if (st.fullModel) lines.push(`${t.sFull}: ${st.fullModel}`);
+  if (st.serial) lines.push(`${t.sSerial}: ${st.serial}`);
+  if (st.buyDate) lines.push(`${t.sDate}: ${st.buyDate}`);
+  lines.push(`${t.sModel}: ${st.model || "—"}`);
   if (p) lines.push(`${t.sState}: ${st.model[0]} · ${p[0]}`);
   const reg = st.model && regionOf(st.model);
   if (reg) lines.push(`${t.sRegion}: ${reg}`);
@@ -673,11 +735,13 @@ $("tmTouchBtn").onclick = startTouch;
 $("tmPixBtn").onclick = () => { $("tmAsk").hidden = true; startColors(); };
 $("tmNo").onclick = () => { st.s.pixels = "ok"; $("tmAsk").hidden = true; update(); tmRefresh(); };
 $("tmYes").onclick = () => { st.s.pixels = "bad"; $("tmAsk").hidden = true; update(); tmRefresh(); };
-$("qrBtn").onclick = () => drawQr($("qrBox"), `${BASE}?modo=pantalla&lang=${st.lang}`);
 
 /* Entradas */
 $("model").oninput = e => { st.model = e.target.value.trim().toUpperCase(); save(); decode(); update(); };
 $("notes").oninput = e => { st.notes = e.target.value; save(); update(); };
+$("serial").oninput = e => { st.serial = e.target.value.trim().toUpperCase(); update(); };
+$("fullModel").oninput = e => { st.fullModel = e.target.value.trim(); update(); };
+$("buyDate").oninput = e => { st.buyDate = e.target.value.trim(); update(); };
 const battInput = () => {
   st.health = $("health").value; st.cycles = $("cycles").value;
   const h = parseInt(st.health, 10);
@@ -699,8 +763,9 @@ if (navigator.share) {
 let armed = false;
 $("reset").onclick = () => {
   if (!armed) { armed = true; $("reset").textContent = T().resetConfirm; setTimeout(() => { armed = false; $("reset").textContent = T().reset; }, 3000); return; }
-  st = { s: {}, model: "", notes: "", lang: st.lang, health: "", cycles: "" }; save();
-  ["model", "notes", "health", "cycles"].forEach(id => $(id).value = "");
+  st = Object.assign(EMPTY(), { lang: st.lang }); save();
+  ["model", "notes", "health", "cycles", "serial", "fullModel", "buyDate"].forEach(id => $(id).value = "");
+  $("importNote").hidden = true;
   armed = false; $("toast").textContent = "";
   applyLang();
 };
