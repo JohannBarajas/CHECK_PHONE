@@ -151,6 +151,9 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent);
 .btn { font: 600 .85rem/1 var(--body); padding: 10px 14px; border-radius: 3px; border: 1.5px solid var(--accent); background: var(--accent-soft); color: var(--ink); cursor: pointer; }
 .btn.solid { background: var(--accent); color: var(--sheet); }
 .btn.ghost { border-color: var(--line); background: transparent; }
+a.btn { text-decoration: none; display: inline-block; }
+a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.send-wa { border-color: var(--ok); background: var(--ok); color: var(--sheet); }
 
 /* Resumen */
 .summary { border: 1.5px solid var(--ink); }
@@ -258,7 +261,10 @@ textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 
     <div class="sum-list" id="sumList"></div>
     <div class="sum-verdict" id="sumVerdict"></div>
     <div class="actions">
-      <button class="btn solid" id="copy" data-i="copy"></button>
+      <button class="btn solid" id="share" data-i="share" hidden></button>
+      <a class="btn send-wa" id="sendWa" target="_blank" rel="noopener" data-i="sendWa"></a>
+      <a class="btn" id="sendMail" data-i="sendMail"></a>
+      <button class="btn" id="copy" data-i="copy"></button>
       <button class="btn ghost" id="reset" data-i="reset"></button>
       <span id="toast" role="status"></span>
     </div>
@@ -282,7 +288,7 @@ textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 
 const UI = {
   es: {
     eyebrow: "Hoja de inspección · iPhone usado", title: "Revisión iPhone",
-    intro: "Marca cada punto como OK o Falla. Abre esta página en el iPhone que revisas para hacer las pruebas de pantalla táctil y píxeles desde el mismo equipo. El progreso se guarda en este navegador.",
+    intro: "Marca cada punto como OK o Falla. Abre esta página en el iPhone que revisas para hacer las pruebas de pantalla táctil y píxeles desde el mismo equipo. No se guarda nada: al terminar, envía el reporte por WhatsApp o correo, o cópialo.",
     checked: "Revisado", fails: "Fallas", pending: "Pendiente", approved: "Aprobado", fail1: "1 falla", failN: n => n + " fallas",
     decTitle: "Estado según número de modelo",
     decPath: "Ajustes › General › Información › toca «Modelo» hasta ver el número que termina en /A",
@@ -299,7 +305,8 @@ const UI = {
     notesPh: "Ej. rayón leve en esquina inferior izquierda, incluye caja y cable",
     sumTitle: "Resumen", sModel: "Modelo", sState: "Estado de venta", sBatt: "Batería", sRegion: "Región",
     vGood: "✓ Aprobado: todo funciona", vFail: n => `✗ ${n} ${n === 1 ? "falla" : "fallas"}: revisar antes de comprar`, vPending: n => `Faltan ${n} puntos por revisar`,
-    copy: "Copiar reporte", reset: "Borrar todo", resetConfirm: "Toca otra vez para borrar",
+    copy: "Copiar reporte", reset: "Nuevo chequeo", resetConfirm: "Toca otra vez para empezar de cero",
+    share: "Compartir…", sendWa: "Enviar por WhatsApp", sendMail: "Enviar por correo", mailSubject: "Reporte revisión iPhone",
     copied: "Reporte copiado", copyFail: "Reporte seleccionado: cópialo manualmente",
     start: "Iniciar prueba", exit: "Salir", tap: "toca para seguir", notesR: "Notas", reportTitle: "REVISIÓN iPHONE",
     madeBy: "Hecho por", custom: "¿Quieres una página personalizada?", waMsg: "Hola, vi la página Revisión iPhone y quiero una página personalizada.",
@@ -309,7 +316,7 @@ const UI = {
   },
   en: {
     eyebrow: "Inspection sheet · Used iPhone", title: "iPhone Check",
-    intro: "Mark each point as OK or Fail. Open this page on the iPhone you are checking to run the touch and pixel tests on the device itself. Progress is saved in this browser.",
+    intro: "Mark each point as OK or Fail. Open this page on the iPhone you are checking to run the touch and pixel tests on the device itself. Nothing is saved: when you finish, send the report by WhatsApp or email, or copy it.",
     checked: "Checked", fails: "Fails", pending: "Pending", approved: "Passed", fail1: "1 fail", failN: n => n + " fails",
     decTitle: "Status from model number",
     decPath: "Settings › General › About › tap «Model Number» until you see the one ending in /A",
@@ -326,7 +333,8 @@ const UI = {
     notesPh: "E.g. light scratch on bottom-left corner, comes with box and cable",
     sumTitle: "Summary", sModel: "Model", sState: "Sale status", sBatt: "Battery", sRegion: "Region",
     vGood: "✓ Passed: everything works", vFail: n => `✗ ${n} ${n === 1 ? "fail" : "fails"}: review before buying`, vPending: n => `${n} points left to check`,
-    copy: "Copy report", reset: "Clear all", resetConfirm: "Tap again to clear",
+    copy: "Copy report", reset: "New check", resetConfirm: "Tap again to start over",
+    share: "Share…", sendWa: "Send by WhatsApp", sendMail: "Send by email", mailSubject: "iPhone check report",
     copied: "Report copied", copyFail: "Report selected: copy it manually",
     start: "Start test", exit: "Exit", tap: "tap to continue", notesR: "Notes", reportTitle: "iPHONE CHECK",
     madeBy: "Made by", custom: "Want a custom page?", waMsg: "Hi, I saw the iPhone Check page and I'd like a custom page.",
@@ -386,10 +394,11 @@ const SECTIONS = [
   ]}
 ];
 
-const KEY = "revision-iphone-v1";
+/* No se guarda ningún dato del chequeo; solo el idioma elegido */
+const LANG_KEY = "revision-iphone-lang";
 let st = { s: {}, model: "", notes: "", lang: "es", health: "", cycles: "" };
-try { const raw = localStorage.getItem(KEY); if (raw) st = Object.assign(st, JSON.parse(raw)); } catch (e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+try { const l = localStorage.getItem(LANG_KEY); if (l === "es" || l === "en") st.lang = l; } catch (e) {}
+const save = () => { try { localStorage.setItem(LANG_KEY, st.lang); } catch (e) {} };
 
 const $ = id => document.getElementById(id);
 const T = () => UI[st.lang];
@@ -514,7 +523,10 @@ function update() {
     const s = st.s[it.k];
     return `<li class="${s === "bad" ? "bad-row" : ""}"><span class="mk ${s || "none"}">${s === "ok" ? "✓" : s === "bad" ? "✗" : "–"}</span><span>${it[L][0]}</span></li>`;
   }).join("")}</ul></div>`).join("");
-  $("report").value = report();
+  const rep = report();
+  $("report").value = rep;
+  $("sendWa").href = "https://wa.me/?text=" + encodeURIComponent(rep);
+  $("sendMail").href = "mailto:?subject=" + encodeURIComponent(t.mailSubject + (st.model ? " " + st.model : "")) + "&body=" + encodeURIComponent(rep);
 }
 
 function report() {
@@ -580,6 +592,12 @@ $("copy").onclick = async () => {
   try { await navigator.clipboard.writeText(report()); $("toast").textContent = T().copied; }
   catch (e) { $("report").select(); $("toast").textContent = T().copyFail; }
 };
+if (navigator.share) {
+  $("share").hidden = false;
+  $("share").onclick = async () => {
+    try { await navigator.share({ title: T().mailSubject, text: report() }); } catch (e) {}
+  };
+}
 let armed = false;
 $("reset").onclick = () => {
   if (!armed) { armed = true; $("reset").textContent = T().resetConfirm; setTimeout(() => { armed = false; $("reset").textContent = T().reset; }, 3000); return; }
