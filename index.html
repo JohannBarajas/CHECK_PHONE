@@ -155,6 +155,14 @@ a.btn { text-decoration: none; display: inline-block; }
 a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .btn.send-wa { border-color: var(--ok); background: var(--ok); color: var(--sheet); }
 
+/* Código QR y modo prueba de pantalla */
+.qr { justify-self: start; background: #fff; padding: 14px; border-radius: 4px; border: 1px solid var(--line); }
+.qr img, .qr canvas { display: block; width: 220px; height: 220px; max-width: 100%; }
+.tm-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-block: 6px; }
+.tm-row strong { font-size: 1.05rem; }
+.tm-ask { display: grid; gap: 10px; padding: 14px; border-radius: 3px; background: var(--warn-soft); }
+.tm-res.ok { color: var(--ok); font-weight: 600; } .tm-res.bad { color: var(--bad); font-weight: 600; }
+
 /* Resumen */
 .summary { border: 1.5px solid var(--ink); }
 .sum-head { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
@@ -205,6 +213,7 @@ textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 
     </div>
     <h1 data-i="title"></h1>
     <p class="muted" data-i="intro"></p>
+    <div><span class="chip ok" id="importNote" data-i="imported" hidden></span></div>
   </header>
 
   <div class="tag" aria-live="polite">
@@ -247,6 +256,13 @@ textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 
   </section>
   </div>
 
+  <section class="panel" aria-labelledby="qrH">
+    <h2 id="qrH" data-i="qrTitle"></h2>
+    <p class="muted" style="margin:0" data-i="qrIntro"></p>
+    <div><button class="btn solid" id="qrBtn" data-i="qrShow"></button></div>
+    <div class="qr" id="qrBox" hidden></div>
+  </section>
+
   <div id="sections"></div>
 
   <section class="panel" aria-labelledby="notesH">
@@ -280,10 +296,32 @@ textarea { width: 100%; min-height: 96px; font: 14px/1.45 var(--body); padding: 
   </footer>
 </div>
 
+<div class="wrap" id="testMode" hidden>
+  <header>
+    <span class="eyebrow" data-i="tmEyebrow"></span>
+    <h1 data-i="tmTitle"></h1>
+    <p class="muted" data-i="tmIntro"></p>
+  </header>
+  <section class="panel">
+    <div class="tm-row"><div><strong data-i="tmTouch"></strong><div class="tm-res" id="tmTouchRes"></div></div><button class="btn solid" id="tmTouchBtn" data-i="start"></button></div>
+    <div class="tm-row"><div><strong data-i="tmPixels"></strong><div class="tm-res" id="tmPixRes"></div></div><button class="btn solid" id="tmPixBtn" data-i="start"></button></div>
+    <div class="tm-ask" id="tmAsk" hidden>
+      <strong data-i="tmAskQ"></strong>
+      <div class="actions"><button class="btn send-wa" id="tmNo" data-i="tmNo"></button><button class="btn" id="tmYes" data-i="tmYes"></button></div>
+    </div>
+  </section>
+  <section class="panel" id="tmDone" hidden>
+    <h2 data-i="tmDoneTitle"></h2>
+    <p class="muted" style="margin:0" data-i="tmDoneHint"></p>
+    <div class="qr" id="tmQr"></div>
+  </section>
+</div>
+
 <div class="overlay" id="grid" hidden></div>
 <div class="ov-info" id="gridInfo" hidden><span id="gridCount">0 %</span><button id="gridExit" data-i="exit"></button></div>
 <div class="overlay" id="colors" hidden><span id="colorName"></span></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const UI = {
   es: {
@@ -309,6 +347,14 @@ const UI = {
     share: "Compartir…", sendWa: "Enviar por WhatsApp", sendMail: "Enviar por correo", mailSubject: "Reporte revisión iPhone",
     copied: "Reporte copiado", copyFail: "Reporte seleccionado: cópialo manualmente",
     start: "Iniciar prueba", exit: "Salir", tap: "toca para seguir", notesR: "Notas", reportTitle: "REVISIÓN iPHONE",
+    qrTitle: "Pantalla desde otro celular",
+    qrIntro: "Si llevas el checklist en tu celular, escanea este código con la cámara del iPhone que revisas. Ahí se hacen la prueba táctil y la de colores, y al final aparece otro código para escanear de vuelta con tu celular. Hazlo al inicio, porque el resultado se abre en una página nueva.",
+    qrShow: "Mostrar código QR", imported: "✓ Resultado de pantalla cargado desde el otro celular",
+    tmEyebrow: "Modo prueba de pantalla", tmTitle: "Prueba de pantalla",
+    tmIntro: "Haz las dos pruebas en este celular. Al terminar aparece un código QR para escanear con el celular que lleva el checklist.",
+    tmTouch: "Táctil (pintar todos los cuadros)", tmPixels: "Píxeles y manchas (colores)",
+    tmAskQ: "¿Viste puntos, manchas o sombras en algún color?", tmNo: "No, se ve bien", tmYes: "Sí, tiene fallas",
+    tmPending: "Pendiente", tmDoneTitle: "Resultado listo", tmDoneHint: "Escanea este código con la cámara del celular que lleva el checklist.",
     madeBy: "Hecho por", custom: "¿Quieres una página personalizada?", waMsg: "Hola, vi la página Revisión iPhone y quiero una página personalizada.",
     colors: ["Rojo", "Verde", "Azul", "Blanco", "Negro", "Gris"],
     prefix: { M: ["Nuevo (venta retail)", "Vendido nuevo por Apple o un distribuidor. Es lo ideal."], F: ["Reacondicionado", "Reparado y revendido por Apple o un operador. Funciona bien pero no es de primera mano; debe costar menos."], N: ["Reemplazo", "Equipo que Apple entregó como cambio en garantía. Es normal, pero confirma que coincida con la caja."], P: ["Personalizado", "Comprado nuevo con grabado. Revisa que la parte trasera tenga el grabado."], "3": ["Demo de exhibición", "Unidad de tienda: muchas horas encendida y batería gastada. Debe costar bastante menos."] },
@@ -337,6 +383,14 @@ const UI = {
     share: "Share…", sendWa: "Send by WhatsApp", sendMail: "Send by email", mailSubject: "iPhone check report",
     copied: "Report copied", copyFail: "Report selected: copy it manually",
     start: "Start test", exit: "Exit", tap: "tap to continue", notesR: "Notes", reportTitle: "iPHONE CHECK",
+    qrTitle: "Screen test from another phone",
+    qrIntro: "If you carry the checklist on your phone, scan this code with the camera of the iPhone you are checking. The touch and color tests run there, and at the end another code appears to scan back with your phone. Do it first, because the result opens in a new page.",
+    qrShow: "Show QR code", imported: "✓ Screen result loaded from the other phone",
+    tmEyebrow: "Screen test mode", tmTitle: "Screen test",
+    tmIntro: "Run both tests on this phone. When done, a QR code appears to scan with the phone that has the checklist.",
+    tmTouch: "Touch (paint every square)", tmPixels: "Pixels and spots (colors)",
+    tmAskQ: "Did you see dots, spots or shadows on any color?", tmNo: "No, looks good", tmYes: "Yes, it has defects",
+    tmPending: "Pending", tmDoneTitle: "Result ready", tmDoneHint: "Scan this code with the camera of the phone that has the checklist.",
     madeBy: "Made by", custom: "Want a custom page?", waMsg: "Hi, I saw the iPhone Check page and I'd like a custom page.",
     colors: ["Red", "Green", "Blue", "White", "Black", "Gray"],
     prefix: { M: ["New (retail)", "Sold new by Apple or a reseller. This is the best case."], F: ["Refurbished", "Repaired and resold by Apple or a carrier. Works fine but is not first-hand; it should cost less."], N: ["Replacement", "Unit Apple gave as a warranty swap. Normal, but check that it matches the box."], P: ["Personalized", "Bought new with engraving. Check that the back has the engraving."], "3": ["Display demo", "Store unit: many hours powered on and a worn battery. It should cost much less."] },
@@ -399,6 +453,21 @@ const LANG_KEY = "revision-iphone-lang";
 let st = { s: {}, model: "", notes: "", lang: "es", health: "", cycles: "" };
 try { const l = localStorage.getItem(LANG_KEY); if (l === "es" || l === "en") st.lang = l; } catch (e) {}
 const save = () => { try { localStorage.setItem(LANG_KEY, st.lang); } catch (e) {} };
+
+/* QR: el iPhone revisado abre ?modo=pantalla; al terminar muestra un QR con ?touch=..&pixels=.. */
+const SITE = "https://johannbarajas.github.io/CHECK_PHONE/";
+const BASE = location.hostname.endsWith("github.io") ? location.origin + location.pathname : SITE;
+const params = new URLSearchParams(location.search);
+const TEST_MODE = params.get("modo") === "pantalla";
+if (params.get("lang") === "es" || params.get("lang") === "en") st.lang = params.get("lang");
+let imported = false;
+["touch", "pixels"].forEach(k => { const v = params.get(k); if (v === "ok" || v === "bad") { st.s[k] = v; imported = true; } });
+function drawQr(el, text) {
+  el.innerHTML = "";
+  if (window.QRCode) new QRCode(el, { text, width: 440, height: 440, correctLevel: QRCode.CorrectLevel.M });
+  else el.textContent = text;
+  el.hidden = false;
+}
 
 const $ = id => document.getElementById(id);
 const T = () => UI[st.lang];
@@ -555,11 +624,13 @@ function startTouch() {
   g.innerHTML = "<div></div>".repeat(cols * rows);
   g.hidden = false; $("gridInfo").hidden = false;
   const n = cols * rows; let on = 0;
+  touchPct = 0;
   const hit = (x, y) => {
     const el = document.elementFromPoint(x, y);
     if (el && el.parentNode === g && !el.classList.contains("on")) {
       el.classList.add("on"); on++;
-      $("gridCount").textContent = Math.floor(on / n * 100) + " %";
+      touchPct = Math.floor(on / n * 100);
+      $("gridCount").textContent = touchPct + " %";
       if (on === n) { st.s.touch = "ok"; save(); update(); setTimeout(stopTouch, 400); }
     }
   };
@@ -567,7 +638,11 @@ function startTouch() {
   g.onpointermove = e => { if (e.buttons || e.pointerType === "touch") hit(e.clientX, e.clientY); };
   $("gridCount").textContent = "0 %";
 }
-function stopTouch() { $("grid").hidden = true; $("gridInfo").hidden = true; $("grid").innerHTML = ""; }
+let touchPct = 0;
+function stopTouch() {
+  $("grid").hidden = true; $("gridInfo").hidden = true; $("grid").innerHTML = "";
+  if (TEST_MODE) { st.s.touch = touchPct === 100 ? "ok" : "bad"; update(); tmRefresh(); }
+}
 $("gridExit").onclick = stopTouch;
 
 /* Prueba de colores */
@@ -575,7 +650,30 @@ const COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ffffff", "#000000", "#808080"
 let ci = 0;
 function startColors() { ci = 0; showColor(); $("colors").hidden = false; }
 function showColor() { $("colors").style.background = COLORS[ci]; $("colorName").textContent = `${T().colors[ci]} · ${ci + 1}/${COLORS.length} · ${T().tap}`; }
-$("colors").onclick = () => { ci++; if (ci >= COLORS.length) $("colors").hidden = true; else showColor(); };
+$("colors").onclick = () => {
+  ci++;
+  if (ci < COLORS.length) { showColor(); return; }
+  $("colors").hidden = true;
+  if (TEST_MODE) $("tmAsk").hidden = false;
+};
+
+/* Modo prueba de pantalla (en el iPhone revisado) */
+function tmRefresh() {
+  const t = T(), tr = $("tmTouchRes"), pr = $("tmPixRes");
+  tr.className = "tm-res " + (st.s.touch || "");
+  tr.textContent = st.s.touch ? `${st.s.touch === "ok" ? "✓" : "✗"} ${touchPct} %` : t.tmPending;
+  pr.className = "tm-res " + (st.s.pixels || "");
+  pr.textContent = st.s.pixels === "ok" ? "✓ " + t.tmNo : st.s.pixels === "bad" ? "✗ " + t.tmYes : t.tmPending;
+  if (st.s.touch && st.s.pixels) {
+    $("tmDone").hidden = false;
+    drawQr($("tmQr"), `${BASE}?touch=${st.s.touch}&pixels=${st.s.pixels}&lang=${st.lang}`);
+  }
+}
+$("tmTouchBtn").onclick = startTouch;
+$("tmPixBtn").onclick = () => { $("tmAsk").hidden = true; startColors(); };
+$("tmNo").onclick = () => { st.s.pixels = "ok"; $("tmAsk").hidden = true; update(); tmRefresh(); };
+$("tmYes").onclick = () => { st.s.pixels = "bad"; $("tmAsk").hidden = true; update(); tmRefresh(); };
+$("qrBtn").onclick = () => drawQr($("qrBox"), `${BASE}?modo=pantalla&lang=${st.lang}`);
 
 /* Entradas */
 $("model").oninput = e => { st.model = e.target.value.trim().toUpperCase(); save(); decode(); update(); };
@@ -611,7 +709,10 @@ $("model").value = st.model;
 $("notes").value = st.notes;
 $("health").value = st.health;
 $("cycles").value = st.cycles;
+if (TEST_MODE) { document.querySelector(".wrap").hidden = true; $("testMode").hidden = false; }
+$("importNote").hidden = !imported;
 applyLang();
+if (TEST_MODE) tmRefresh();
 </script>
 </body>
 </html>
