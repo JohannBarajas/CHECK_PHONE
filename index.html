@@ -263,7 +263,15 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
     <div class="fields">
       <div class="field"><label for="serial" data-i="apSerial"></label><input class="txt mono-in" id="serial" autocomplete="off" spellcheck="false"></div>
       <div class="field"><label for="fullModel" data-i="apModel"></label><input class="txt" id="fullModel" autocomplete="off"></div>
-      <div class="field"><label for="buyDate" data-i="apDate"></label><input class="txt" id="buyDate" autocomplete="off"></div>
+      <div class="field">
+        <label for="buyDate" data-i="apDate"></label>
+        <div class="seg" role="group" aria-label="Apple">
+          <button class="lang" id="dtBuy" data-i="dtBuy" aria-pressed="true"></button>
+          <button class="lang" id="dtWar" data-i="dtWar" aria-pressed="false"></button>
+        </div>
+        <input class="txt" id="buyDate" type="date">
+        <div><span class="chip none" id="ageChip"></span></div>
+      </div>
     </div>
     <div class="path" data-i="apHint"></div>
   </section>
@@ -385,10 +393,13 @@ const UI = {
     qrTitle: "Prueba en el celular del cliente",
     qrIntro: "El cliente escanea este código con la cámara de su iPhone y hace la prueba ahí. Al terminar, su pantalla muestra el resultado y otro código para escanear con tu celular (se abre en una página nueva, por eso conviene hacerlo al inicio).",
     apTitle: "Modelo y fecha de compra (Apple)", apPath: "Ajustes › General › Información › Número de serie (mantenlo presionado para copiarlo)",
-    apOpen: "Abrir checkcoverage.apple.com", apSerial: "Número de serie", apModel: "Modelo completo que muestra Apple", apDate: "Fecha de compra o fin de garantía",
-    apHint: "Pega el serial en la página de Apple y anota el modelo y la fecha. Si solo muestra cuándo termina la garantía, la compra fue más o menos 1 año antes. «Fecha de compra no validada» quiere decir que Apple no tiene registro de la venta.",
-    phSerial: "Ej. DNQXXXXXXXXX", phModel: "Ej. iPhone 14 Pro 128 GB", phDate: "Ej. garantía hasta 15/03/2026",
-    sSerial: "Serial", sFull: "Modelo (Apple)", sDate: "Compra / garantía",
+    apOpen: "Abrir checkcoverage.apple.com", apSerial: "Número de serie", apModel: "Modelo completo que muestra Apple", apDate: "Fecha de compra",
+    dtBuy: "Fecha de compra", dtWar: "Fin de garantía",
+    apHint: "Pega el serial en la página de Apple y anota el modelo y la fecha. Si Apple solo muestra cuándo termina la garantía, elige «Fin de garantía» y la página calcula la compra (1 año antes). «Fecha de compra no validada» quiere decir que Apple no tiene registro de la venta.",
+    phSerial: "Ej. DNQXXXXXXXXX", phModel: "Ej. iPhone 14 Pro 128 GB",
+    sSerial: "Serial", sFull: "Modelo (Apple)", sDate: "Compra", estimated: "estimada",
+    ageNone: "Sin fecha", age: (y, m) => [y ? `${y} ${y === 1 ? "año" : "años"}` : "", m ? `${m} ${m === 1 ? "mes" : "meses"}` : ""].filter(Boolean).join(" y ") || "menos de 1 mes",
+    ageNew: "Casi nuevo", ageMid: "Uso normal", ageOld: "Ya tiene años: negociar precio", ageVeryOld: "Equipo viejo: precio más bajo",
     qrShow: "Mostrar código QR", imported: "✓ Resultado de pantalla cargado desde el otro celular",
     tmEyebrow: "Modo prueba de pantalla", tmTitle: "Prueba de pantalla",
     tmIntro: "Haz las dos pruebas en este celular. Al terminar aparece un código QR para escanear con el celular que lleva el checklist.",
@@ -426,10 +437,13 @@ const UI = {
     qrTitle: "Test on the client's phone",
     qrIntro: "The client scans this code with their iPhone camera and runs the test there. When done, their screen shows the result and another code to scan with your phone (it opens in a new page, so do it first).",
     apTitle: "Model and purchase date (Apple)", apPath: "Settings › General › About › Serial Number (long-press to copy it)",
-    apOpen: "Open checkcoverage.apple.com", apSerial: "Serial number", apModel: "Full model shown by Apple", apDate: "Purchase date or warranty end",
-    apHint: "Paste the serial on Apple's page and write down the model and date. If it only shows when the warranty ends, it was bought about 1 year earlier. «Purchase date not validated» means Apple has no record of the sale.",
-    phSerial: "E.g. DNQXXXXXXXXX", phModel: "E.g. iPhone 14 Pro 128 GB", phDate: "E.g. warranty until 03/15/2026",
-    sSerial: "Serial", sFull: "Model (Apple)", sDate: "Purchase / warranty",
+    apOpen: "Open checkcoverage.apple.com", apSerial: "Serial number", apModel: "Full model shown by Apple", apDate: "Purchase date",
+    dtBuy: "Purchase date", dtWar: "Warranty end",
+    apHint: "Paste the serial on Apple's page and write down the model and date. If Apple only shows when the warranty ends, choose «Warranty end» and the page works out the purchase (1 year earlier). «Purchase date not validated» means Apple has no record of the sale.",
+    phSerial: "E.g. DNQXXXXXXXXX", phModel: "E.g. iPhone 14 Pro 128 GB",
+    sSerial: "Serial", sFull: "Model (Apple)", sDate: "Purchased", estimated: "estimated",
+    ageNone: "No date", age: (y, m) => [y ? `${y} ${y === 1 ? "year" : "years"}` : "", m ? `${m} ${m === 1 ? "month" : "months"}` : ""].filter(Boolean).join(" ") || "under 1 month",
+    ageNew: "Almost new", ageMid: "Normal use", ageOld: "A few years old: negotiate price", ageVeryOld: "Old device: lower price",
     qrShow: "Show QR code", imported: "✓ Screen result loaded from the other phone",
     tmEyebrow: "Screen test mode", tmTitle: "Screen test",
     tmIntro: "Run both tests on this phone. When done, a QR code appears to scan with the phone that has the checklist.",
@@ -496,7 +510,7 @@ const SECTIONS = [
 
 /* No se guarda ningún dato del chequeo; solo el idioma elegido */
 const LANG_KEY = "revision-iphone-lang";
-const EMPTY = () => ({ s: {}, model: "", notes: "", health: "", cycles: "", serial: "", fullModel: "", buyDate: "" });
+const EMPTY = () => ({ s: {}, model: "", notes: "", health: "", cycles: "", serial: "", fullModel: "", buyDate: "", dateKind: "buy" });
 let st = Object.assign(EMPTY(), { lang: "es" });
 try { const l = localStorage.getItem(LANG_KEY); if (l === "es" || l === "en") st.lang = l; } catch (e) {}
 const save = () => { try { localStorage.setItem(LANG_KEY, st.lang); } catch (e) {} };
@@ -537,6 +551,22 @@ function cycleInfo() {
   if (c <= 300) return { cls: "ok", label: t.cLow };
   if (c <= 600) return { cls: "warn", label: t.cMid };
   return { cls: "bad", label: t.cHigh };
+}
+/* Antigüedad: desde la fecha de compra (o fin de garantía − 1 año) hasta hoy */
+function ageInfo() {
+  const t = T();
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(st.buyDate);
+  if (!m) return { cls: "none", label: t.ageNone, text: "" };
+  const p = new Date(+m[1] - (st.dateKind === "war" ? 1 : 0), +m[2] - 1, +m[3]);
+  const now = new Date();
+  let months = (now.getFullYear() - p.getFullYear()) * 12 + now.getMonth() - p.getMonth() - (now.getDate() < p.getDate() ? 1 : 0);
+  months = Math.max(0, months);
+  const y = Math.floor(months / 12), mo = months % 12;
+  const cls = months < 24 ? "ok" : months < 36 ? "warn" : "bad";
+  const tag = months < 12 ? t.ageNew : months < 24 ? t.ageMid : months < 36 ? t.ageOld : t.ageVeryOld;
+  const date = p.toLocaleDateString(st.lang === "es" ? "es-CO" : "en-US", { day: "numeric", month: "short", year: "numeric" });
+  const est = st.dateKind === "war" ? ` (${t.estimated})` : "";
+  return { cls, label: `${t.age(y, mo)} · ${tag}`, text: `${date}${est} · ${t.age(y, mo)} (${tag})` };
 }
 function battText() {
   const hi = healthInfo(), ci = cycleInfo(), t = T();
@@ -597,7 +627,6 @@ function applyLang() {
   $("notes").placeholder = t.notesPh;
   $("serial").placeholder = t.phSerial;
   $("fullModel").placeholder = t.phModel;
-  $("buyDate").placeholder = t.phDate;
   $("waLink").href = "https://wa.me/17183149761?text=" + encodeURIComponent(t.waMsg);
   $("legend").innerHTML = Object.entries(t.legend).map(([k, v]) => `<li><b>${k}</b>${v}</li>`).join("");
   renderSections();
@@ -652,7 +681,11 @@ function update() {
   else { v.className = "verdict pending"; v.textContent = t.pending; sv.className = "sum-verdict pending"; sv.textContent = t.vPending(total - done); }
 
   const p = st.model && t.prefix[st.model[0]];
-  const head = [[t.sFull, st.fullModel || "—"], [t.sSerial, st.serial || "—"], [t.sDate, st.buyDate || "—"], [t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"], [t.sBatt, battText()]];
+  const ai = ageInfo();
+  $("ageChip").className = "chip " + ai.cls; $("ageChip").textContent = ai.label;
+  $("dtBuy").setAttribute("aria-pressed", String(st.dateKind === "buy"));
+  $("dtWar").setAttribute("aria-pressed", String(st.dateKind === "war"));
+  const head = [[t.sFull, st.fullModel || "—"], [t.sSerial, st.serial || "—"], [t.sDate, ai.text || "—"], [t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"], [t.sBatt, battText()]];
   $("sumHead").innerHTML = head.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
   $("sumList").innerHTML = SECTIONS.map(sec => `<div><h3>${sec[L]}</h3><ul>${sec.items.map(it => {
     const s = st.s[it.k];
@@ -670,7 +703,8 @@ function report() {
   const lines = [t.reportTitle];
   if (st.fullModel) lines.push(`${t.sFull}: ${st.fullModel}`);
   if (st.serial) lines.push(`${t.sSerial}: ${st.serial}`);
-  if (st.buyDate) lines.push(`${t.sDate}: ${st.buyDate}`);
+  const ai = ageInfo();
+  if (ai.text) lines.push(`${t.sDate}: ${ai.text}`);
   lines.push(`${t.sModel}: ${st.model || "—"}`);
   if (p) lines.push(`${t.sState}: ${st.model[0]} · ${p[0]}`);
   const reg = st.model && regionOf(st.model);
@@ -751,7 +785,9 @@ $("model").oninput = e => { st.model = e.target.value.trim().toUpperCase(); save
 $("notes").oninput = e => { st.notes = e.target.value; save(); update(); };
 $("serial").oninput = e => { st.serial = e.target.value.trim().toUpperCase(); update(); };
 $("fullModel").oninput = e => { st.fullModel = e.target.value.trim(); update(); };
-$("buyDate").oninput = e => { st.buyDate = e.target.value.trim(); update(); };
+$("buyDate").oninput = $("buyDate").onchange = e => { st.buyDate = e.target.value; update(); };
+$("dtBuy").onclick = () => { st.dateKind = "buy"; update(); };
+$("dtWar").onclick = () => { st.dateKind = "war"; update(); };
 const battInput = () => {
   st.health = $("health").value; st.cycles = $("cycles").value;
   const h = parseInt(st.health, 10);
