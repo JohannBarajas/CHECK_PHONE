@@ -178,6 +178,10 @@ a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sum-head { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
 .sum-head div span { display: block; font: 500 .7rem/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .sum-head div b { font: 600 1rem/1.3 var(--mono); }
+.sum-age { font: 700 1.35rem/1.15 var(--display); letter-spacing: .02em; text-wrap: balance; padding: 12px 14px; border-radius: 3px; }
+.sum-age.ok { color: var(--ok); background: var(--ok-soft); }
+.sum-age.warn { color: var(--warn); background: var(--warn-soft); }
+.sum-age.bad { color: var(--bad); background: var(--bad-soft); }
 .sum-list { display: grid; gap: 14px; }
 .sum-list h3 { margin: 0 0 4px; font: 600 .75rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .sum-list ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
@@ -316,6 +320,7 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
 
   <section class="panel summary" aria-labelledby="sumH">
     <h2 id="sumH" data-i="sumTitle"></h2>
+    <div class="sum-age" id="sumAge" hidden></div>
     <div class="sum-head" id="sumHead"></div>
     <div class="sum-list" id="sumList"></div>
     <div class="sum-verdict" id="sumVerdict"></div>
@@ -399,6 +404,7 @@ const UI = {
     phSerial: "Ej. DNQXXXXXXXXX", phModel: "Ej. iPhone 14 Pro 128 GB",
     sSerial: "Serial", sFull: "Modelo (Apple)", sDate: "Compra", estimated: "estimada",
     ageNone: "Sin fecha", age: (y, m) => [y ? `${y} ${y === 1 ? "año" : "años"}` : "", m ? `${m} ${m === 1 ? "mes" : "meses"}` : ""].filter(Boolean).join(" y ") || "menos de 1 mes",
+    ageSentence: (d, a, est) => `Comprado el ${d}${est}, por lo tanto tiene ${a} de uso`,
     ageNew: "Casi nuevo", ageMid: "Uso normal", ageOld: "Ya tiene años: negociar precio", ageVeryOld: "Equipo viejo: precio más bajo",
     qrShow: "Mostrar código QR", imported: "✓ Resultado de pantalla cargado desde el otro celular",
     tmEyebrow: "Modo prueba de pantalla", tmTitle: "Prueba de pantalla",
@@ -443,6 +449,7 @@ const UI = {
     phSerial: "E.g. DNQXXXXXXXXX", phModel: "E.g. iPhone 14 Pro 128 GB",
     sSerial: "Serial", sFull: "Model (Apple)", sDate: "Purchased", estimated: "estimated",
     ageNone: "No date", age: (y, m) => [y ? `${y} ${y === 1 ? "year" : "years"}` : "", m ? `${m} ${m === 1 ? "month" : "months"}` : ""].filter(Boolean).join(" ") || "under 1 month",
+    ageSentence: (d, a, est) => `Purchased on ${d}${est}, so it has ${a} of use`,
     ageNew: "Almost new", ageMid: "Normal use", ageOld: "A few years old: negotiate price", ageVeryOld: "Old device: lower price",
     qrShow: "Show QR code", imported: "✓ Screen result loaded from the other phone",
     tmEyebrow: "Screen test mode", tmTitle: "Screen test",
@@ -566,7 +573,7 @@ function ageInfo() {
   const tag = months < 12 ? t.ageNew : months < 24 ? t.ageMid : months < 36 ? t.ageOld : t.ageVeryOld;
   const date = p.toLocaleDateString(st.lang === "es" ? "es-CO" : "en-US", { day: "numeric", month: "short", year: "numeric" });
   const est = st.dateKind === "war" ? ` (${t.estimated})` : "";
-  return { cls, label: `${t.age(y, mo)} · ${tag}`, text: `${date}${est} · ${t.age(y, mo)} (${tag})` };
+  return { cls, label: `${t.age(y, mo)} · ${tag}`, text: `${date}${est} · ${t.age(y, mo)} (${tag})`, sentence: t.ageSentence(date, t.age(y, mo), est).toUpperCase() };
 }
 function battText() {
   const hi = healthInfo(), ci = cycleInfo(), t = T();
@@ -683,6 +690,8 @@ function update() {
   const p = st.model && t.prefix[st.model[0]];
   const ai = ageInfo();
   $("ageChip").className = "chip " + ai.cls; $("ageChip").textContent = ai.label;
+  $("sumAge").hidden = !ai.sentence;
+  $("sumAge").className = "sum-age " + ai.cls; $("sumAge").textContent = ai.sentence || "";
   $("dtBuy").setAttribute("aria-pressed", String(st.dateKind === "buy"));
   $("dtWar").setAttribute("aria-pressed", String(st.dateKind === "war"));
   const head = [[t.sFull, st.fullModel || "—"], [t.sSerial, st.serial || "—"], [t.sDate, ai.text || "—"], [t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"], [t.sBatt, battText()]];
@@ -701,6 +710,8 @@ function report() {
   const t = T(), L = st.lang;
   const p = st.model && t.prefix[st.model[0]];
   const lines = [t.reportTitle];
+  const ag = ageInfo();
+  if (ag.sentence) lines.push(ag.sentence, "");
   if (st.fullModel) lines.push(`${t.sFull}: ${st.fullModel}`);
   if (st.serial) lines.push(`${t.sSerial}: ${st.serial}`);
   const ai = ageInfo();
