@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-/* Hoja de banco de técnico: una columna, etiqueta de inspección arriba, secciones con estado OK / Falla por ítem, resumen final */
+/* Hoja de banco de técnico: pasos numerados en el orden de la revisión (lo decisivo primero), etiqueta de progreso fija, resumen final */
 :root {
   --paper: #f3f6f7;
   --sheet: #ffffff;
@@ -55,40 +55,37 @@ body {
 }
 .wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
 .duo { display: grid; gap: 20px; align-items: start; }
+#sections { display: grid; gap: 20px; align-items: start; }
 @media (min-width: 980px) {
   .wrap { max-width: 1180px; }
-  .duo { grid-template-columns: 1fr 1fr; }
-  #sections { grid-template-columns: 1fr 1fr; align-items: start; }
+  .duo, #sections { grid-template-columns: 1fr 1fr; }
   header p { max-width: 80ch; }
 }
-@media (min-width: 980px) and (max-width: 1180px) { .batt { grid-template-columns: 1fr; } }
 
-/* Pie de página */
-footer { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; align-items: center; padding-top: 18px; border-top: 1.5px solid var(--ink); font-size: .9rem; }
-footer .by { font-family: var(--mono); font-size: .82rem; color: var(--muted); }
-footer .by a { color: var(--ink); }
-.wa { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.wa a { font: 600 .85rem/1 var(--body); padding: 10px 14px; border-radius: 3px; background: var(--ok); color: var(--sheet); text-decoration: none; }
-.wa a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: .01em; text-wrap: balance; margin: 0; line-height: 1.05; }
 h1 { font-size: 2.6rem; text-transform: uppercase; }
-h2 { font-size: 1.45rem; text-transform: uppercase; }
+h2 { font-size: 1.45rem; text-transform: uppercase; display: flex; gap: 10px; align-items: baseline; }
+h2 .n { font: 600 .8rem/1 var(--mono); color: var(--sheet); background: var(--accent); padding: 5px 7px; border-radius: 3px; transform: translateY(-2px); }
 .eyebrow { font: 600 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
 .muted { color: var(--muted); }
 .path { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+p { margin: 0; }
 
 header { display: grid; gap: 8px; }
-header p { margin: 0; max-width: 62ch; }
+header p { max-width: 62ch; }
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 .seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 3px; overflow: hidden; }
-.seg button { font: 600 .8rem/1 var(--mono); letter-spacing: .06em; border: 0; background: transparent; color: var(--muted); padding: 10px 12px; cursor: pointer; min-width: 58px; }
+.seg button { font: 600 .8rem/1 var(--mono); letter-spacing: .06em; border: 0; background: transparent; color: var(--muted); padding: 10px 12px; cursor: pointer; min-width: 52px; min-height: 42px; }
 .seg button + button { border-left: 1.5px solid var(--line); }
 .seg button[aria-pressed="true"].ok { background: var(--ok); color: var(--sheet); }
 .seg button[aria-pressed="true"].bad { background: var(--bad); color: var(--sheet); }
 .seg button[aria-pressed="true"].lang { background: var(--ink); color: var(--sheet); }
+.seg button[aria-pressed="true"].gA { background: var(--ok); color: var(--sheet); }
+.seg button[aria-pressed="true"].gB { background: var(--warn); color: var(--sheet); }
+.seg button[aria-pressed="true"].gC { background: var(--bad); color: var(--sheet); }
 
-/* Etiqueta de inspección */
+/* Etiqueta de progreso */
 .tag {
   background: var(--sheet); border: 1.5px solid var(--ink); border-radius: 4px;
   display: grid; grid-template-columns: 1fr auto; gap: 16px; padding: 16px 18px; align-items: center;
@@ -105,13 +102,18 @@ header p { margin: 0; max-width: 62ch; }
 .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s; }
 
 /* Paneles */
-.panel { background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; padding: 18px; display: grid; gap: 12px; }
-.panel label { font-weight: 600; }
+.panel { background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; padding: 18px; display: grid; gap: 12px; align-content: start; }
+.panel label, .field > .lbl { font-weight: 600; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.field { display: grid; gap: 6px; align-content: start; }
+input.txt { font: 500 16px/1.3 var(--body); width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); min-height: 48px; }
 input.big {
   font: 600 1.5rem/1 var(--mono); letter-spacing: .06em; text-transform: uppercase;
   width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink);
 }
-input.big:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sub { border-top: 1px dashed var(--line); padding-top: 12px; display: grid; gap: 10px; }
+
 .result { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; padding: 12px; border-radius: 3px; background: var(--paper); }
 .result span { display: block; }
 .letter { font: 700 2.6rem/1 var(--mono); width: 64px; height: 64px; display: grid; place-items: center; border-radius: 3px; border: 2px solid currentColor; }
@@ -120,16 +122,15 @@ input.big:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px;
 .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 14px; font-size: .85rem; margin: 0; padding: 0; list-style: none; }
 .legend b { font-family: var(--mono); color: var(--accent); margin-right: 6px; }
 
-/* Apple: serial, modelo y fecha */
-.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
-.field { display: grid; gap: 6px; align-content: start; }
-input.txt { font: 500 16px/1.3 var(--body); width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); }
-input.txt.mono-in { font-family: var(--mono); letter-spacing: .05em; text-transform: uppercase; }
-input.txt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
-
-/* QR de cada prueba de pantalla */
-.qr-wrap { flex-basis: 100%; display: grid; gap: 10px; padding: 14px; border-radius: 3px; background: var(--accent-soft); }
-.qr-wrap p { margin: 0; font-size: .9rem; }
+/* Pestañita de tiempo de uso */
+.age-pop { position: relative; display: grid; gap: 4px; margin-top: 6px; padding: 12px 14px; border-radius: 4px; border: 1.5px solid currentColor; animation: pop-in .28s ease-out; }
+.age-pop::before { content: ""; position: absolute; top: -8px; left: 22px; width: 12px; height: 12px; background: inherit; border-left: 1.5px solid currentColor; border-top: 1.5px solid currentColor; transform: rotate(45deg); }
+.age-pop b { font: 700 1.7rem/1.05 var(--display); letter-spacing: .02em; }
+.age-pop span { font-size: .88rem; color: var(--ink); }
+.age-pop.ok, .sum-age.ok { color: var(--ok); background: var(--ok-soft); }
+.age-pop.warn, .sum-age.warn { color: var(--warn); background: var(--warn-soft); }
+.age-pop.bad, .sum-age.bad { color: var(--bad); background: var(--bad-soft); }
+@keyframes pop-in { from { opacity: .3; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
 
 /* Batería */
 .batt { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -144,9 +145,13 @@ input.txt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px;
 .chip.bad { color: var(--bad); background: var(--bad-soft); }
 .chip.none { color: var(--muted); background: var(--paper); }
 
-/* Secciones */
+/* Estado físico */
+.grades { display: grid; gap: 10px; }
+.grade-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.grade-row span { font-weight: 600; }
+
+/* Secciones del checklist */
 section.block { background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; }
-#sections { display: grid; gap: 20px; }
 .block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 16px 18px 10px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .block-head .count { font: 600 .78rem/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
 ul.items { list-style: none; margin: 0; padding: 0; }
@@ -156,43 +161,26 @@ li.item[data-state="ok"] { background: linear-gradient(90deg, var(--ok-soft), tr
 li.item[data-state="bad"] { background: linear-gradient(90deg, var(--bad-soft), transparent 70%); }
 .item .t { font-weight: 600; }
 .item .h { font-size: .87rem; color: var(--muted); margin-top: 2px; }
-.item .tools { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
-button:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.btn { font: 600 .85rem/1 var(--body); padding: 10px 14px; border-radius: 3px; border: 1.5px solid var(--accent); background: var(--accent-soft); color: var(--ink); cursor: pointer; }
+.item .tools { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.tool-status { flex-basis: 100%; font: 600 .82rem/1.3 var(--mono); color: var(--accent); }
+.tool-status:empty { display: none; }
+.btn { font: 600 .85rem/1 var(--body); padding: 10px 14px; border-radius: 3px; border: 1.5px solid var(--accent); background: var(--accent-soft); color: var(--ink); cursor: pointer; min-height: 42px; }
 .btn.solid { background: var(--accent); color: var(--sheet); }
 .btn.ghost { border-color: var(--line); background: transparent; }
-a.btn { text-decoration: none; display: inline-block; }
-a.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .btn.send-wa { border-color: var(--ok); background: var(--ok); color: var(--sheet); }
-
-/* Código QR y modo prueba de pantalla */
+.qr-wrap { flex-basis: 100%; display: grid; gap: 10px; padding: 14px; border-radius: 3px; background: var(--accent-soft); }
+.qr-wrap p { font-size: .9rem; }
 .qr { justify-self: start; background: #fff; padding: 14px; border-radius: 4px; border: 1px solid var(--line); }
 .qr img, .qr canvas { display: block; width: 220px; height: 220px; max-width: 100%; }
-.tm-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-block: 6px; }
-.tm-row strong { font-size: 1.05rem; }
-.tm-ask { display: grid; gap: 10px; padding: 14px; border-radius: 3px; background: var(--warn-soft); }
-.tm-res.ok { color: var(--ok); font-weight: 600; } .tm-res.bad { color: var(--bad); font-weight: 600; }
 
 /* Resumen */
 .summary { border: 1.5px solid var(--ink); }
-.sum-head { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.sum-age { font: 700 1.35rem/1.15 var(--display); letter-spacing: .02em; text-wrap: balance; padding: 12px 14px; border-radius: 3px; }
+.sum-head { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
 .sum-head div span { display: block; font: 500 .7rem/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .sum-head div b { font: 600 1rem/1.3 var(--mono); }
-/* Pestañita de tiempo de uso bajo la fecha */
-.age-pop { position: relative; display: grid; gap: 4px; margin-top: 6px; padding: 12px 14px; border-radius: 4px; border: 1.5px solid currentColor; animation: pop-in .28s ease-out; }
-.age-pop::before { content: ""; position: absolute; top: -8px; left: 22px; width: 12px; height: 12px; background: inherit; border-left: 1.5px solid currentColor; border-top: 1.5px solid currentColor; transform: rotate(45deg); }
-.age-pop b { font: 700 1.7rem/1.05 var(--display); letter-spacing: .02em; }
-.age-pop span { font-size: .88rem; color: var(--ink); }
-.age-pop.ok { color: var(--ok); background: var(--ok-soft); }
-.age-pop.warn { color: var(--warn); background: var(--warn-soft); }
-.age-pop.bad { color: var(--bad); background: var(--bad-soft); }
-@keyframes pop-in { from { opacity: .3; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .age-pop { animation: none; } }
-.sum-age { font: 700 1.35rem/1.15 var(--display); letter-spacing: .02em; text-wrap: balance; padding: 12px 14px; border-radius: 3px; }
-.sum-age.ok { color: var(--ok); background: var(--ok-soft); }
-.sum-age.warn { color: var(--warn); background: var(--warn-soft); }
-.sum-age.bad { color: var(--bad); background: var(--bad-soft); }
-.sum-list { display: grid; gap: 14px; }
+.sum-list { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .sum-list h3 { margin: 0 0 4px; font: 600 .75rem/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .sum-list ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
 .sum-list li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; align-items: baseline; }
@@ -207,6 +195,22 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
 .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 #toast { font-size: .85rem; color: var(--ok); }
 
+/* Pie */
+footer { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; align-items: center; padding-top: 18px; border-top: 1.5px solid var(--ink); font-size: .9rem; }
+footer .by { font-family: var(--mono); font-size: .82rem; color: var(--muted); }
+footer .by a { color: var(--ink); }
+.wa { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.wa a { font: 600 .85rem/1 var(--body); padding: 10px 14px; border-radius: 3px; background: var(--ok); color: var(--sheet); text-decoration: none; }
+
+/* Modo prueba (celular del cliente) */
+.tm-row { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; padding-block: 10px; border-bottom: 1px solid var(--line); }
+.tm-row:last-child { border-bottom: 0; }
+.tm-row strong { font-size: 1.05rem; }
+.tm-row .tool-status, .tm-row a.btn { grid-column: 1 / -1; }
+.tm-row a.btn { justify-self: start; }
+.tm-res.ok { color: var(--ok); font-weight: 600; } .tm-res.bad { color: var(--bad); font-weight: 600; }
+.tm-ask { display: grid; gap: 10px; padding: 14px; border-radius: 3px; background: var(--warn-soft); }
+
 /* Pruebas a pantalla completa */
 .overlay { position: fixed; inset: 0; z-index: 50; touch-action: none; user-select: none; -webkit-user-select: none; }
 #grid { display: grid; background: #000; }
@@ -217,9 +221,7 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
 #colors { display: grid; place-items: end center; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); }
 #colors span { font: 600 12px var(--mono); padding: 6px 10px; background: rgba(127,127,127,.5); color: #fff; border-radius: 2px; }
 
-.seg button { min-height: 42px; }
-
-/* Celular: etiqueta de progreso fija arriba, botones grandes a todo el ancho */
+/* Celular: progreso fijo arriba, botones grandes a todo el ancho */
 @media (max-width: 640px) {
   body { padding-block: 14px 48px; font-size: 16px; }
   .wrap { gap: 16px; }
@@ -237,16 +239,18 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
   li.item { grid-template-columns: 1fr; padding: 12px 14px; }
   li.item .seg { width: 100%; }
   li.item .seg button { flex: 1; min-height: 48px; font-size: .9rem; }
-  .item .tools .btn { flex: 1; min-height: 44px; }
-  .actions .btn { flex: 1 1 calc(50% - 10px); text-align: center; min-height: 46px; }
+  .item .tools .btn { flex: 1 1 auto; min-height: 44px; }
+  .grade-row .seg { width: 100%; }
+  .grade-row .seg button { flex: 1; min-height: 46px; }
+  .actions .btn { flex: 1 1 calc(50% - 10px); min-height: 46px; }
   footer { flex-direction: column; align-items: flex-start; }
 }
-@media (prefers-reduced-motion: reduce) { .bar i, .gauge i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .bar i, .gauge i { transition: none; } .age-pop { animation: none; } }
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<div class="wrap" id="main">
   <header>
     <div class="top">
       <span class="eyebrow" data-i="eyebrow"></span>
@@ -270,8 +274,12 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
     <div class="bar"><i id="bar"></i></div>
   </div>
 
+  <!-- Paso 1: bloqueos (lo que tumba una compra) -->
+  <div id="sectionsTop"></div>
+
+  <!-- Paso 2: modelo, fecha de compra y tipo de venta -->
   <section class="panel" aria-labelledby="appleH">
-    <h2 id="appleH" data-i="apTitle"></h2>
+    <h2 id="appleH"><span class="n">2</span><span data-i="apTitle"></span></h2>
     <div class="path" data-i="apPath"></div>
     <div><a class="btn solid" href="https://checkcoverage.apple.com" target="_blank" rel="noopener" data-i="apOpen"></a></div>
     <div class="fields">
@@ -287,42 +295,52 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
       </div>
     </div>
     <div class="path" data-i="apHint"></div>
+    <div class="sub">
+      <label for="model" data-i="modelLabel"></label>
+      <div class="path" data-i="decPath"></div>
+      <input class="big" id="model" autocomplete="off" spellcheck="false" placeholder="MQ9X3LL/A">
+      <div class="result" id="result"></div>
+      <ul class="legend" id="legend"></ul>
+    </div>
   </section>
 
   <div class="duo">
-  <section class="panel" aria-labelledby="decH">
-    <h2 id="decH" data-i="decTitle"></h2>
-    <div class="path" data-i="decPath"></div>
-    <label for="model" data-i="modelLabel"></label>
-    <input class="big" id="model" autocomplete="off" spellcheck="false" placeholder="MQ9X3LL/A">
-    <div class="result" id="result"></div>
-    <ul class="legend" id="legend"></ul>
-  </section>
+    <!-- Paso 3: batería -->
+    <section class="panel" aria-labelledby="batH">
+      <h2 id="batH"><span class="n">3</span><span data-i="batTitle"></span></h2>
+      <div class="path" data-i="batPath"></div>
+      <div class="batt">
+        <div class="field">
+          <label for="health" data-i="health"></label>
+          <div class="unit"><input class="big" id="health" type="number" inputmode="numeric" min="1" max="100" placeholder="87"><em>%</em></div>
+          <div class="gauge"><i id="hGauge"></i></div>
+          <div><span class="chip none" id="hChip"></span></div>
+        </div>
+        <div class="field">
+          <label for="cycles" data-i="cycles"></label>
+          <div class="unit"><input class="big" id="cycles" type="number" inputmode="numeric" min="0" placeholder="312"><em data-i="cycUnit"></em></div>
+          <div class="path" data-i="cycHint"></div>
+          <div><span class="chip none" id="cChip"></span></div>
+        </div>
+      </div>
+    </section>
 
-  <section class="panel" aria-labelledby="batH">
-    <h2 id="batH" data-i="batTitle"></h2>
-    <div class="path" data-i="batPath"></div>
-    <div class="batt">
-      <div class="field">
-        <label for="health" data-i="health"></label>
-        <div class="unit"><input class="big" id="health" type="number" inputmode="numeric" min="1" max="100" placeholder="87"><em>%</em></div>
-        <div class="gauge"><i id="hGauge"></i></div>
-        <div><span class="chip none" id="hChip"></span></div>
-      </div>
-      <div class="field">
-        <label for="cycles" data-i="cycles"></label>
-        <div class="unit"><input class="big" id="cycles" type="number" inputmode="numeric" min="0" placeholder="312"><em data-i="cycUnit"></em></div>
-        <div class="path" data-i="cycHint"></div>
-        <div><span class="chip none" id="cChip"></span></div>
-      </div>
-    </div>
-  </section>
+    <!-- Paso 4: estado físico -->
+    <section class="panel" aria-labelledby="physH">
+      <h2 id="physH"><span class="n">4</span><span data-i="phTitle"></span></h2>
+      <p class="muted" data-i="phHint"></p>
+      <div class="grades" id="grades"></div>
+    </section>
   </div>
 
+  <!-- Pasos 5 en adelante: checklist -->
   <div id="sections"></div>
 
-  <section class="panel" aria-labelledby="notesH">
-    <h2 id="notesH" data-i="notesTitle"></h2>
+  <section class="panel" aria-labelledby="priceH">
+    <h2 id="priceH"><span class="n" id="priceN"></span><span data-i="priceTitle"></span></h2>
+    <div class="fields">
+      <div class="field"><label for="price" data-i="priceLabel"></label><input class="txt" id="price" inputmode="decimal" autocomplete="off" placeholder="$"></div>
+    </div>
     <label for="notes" class="muted" data-i="notesLabel"></label>
     <textarea id="notes"></textarea>
   </section>
@@ -353,6 +371,7 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
   </footer>
 </div>
 
+<!-- Modo prueba en el celular del cliente (?modo=pantalla) -->
 <div class="wrap" id="testMode" hidden>
   <header>
     <span class="eyebrow" data-i="tmEyebrow"></span>
@@ -360,16 +379,15 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
     <p class="muted" data-i="tmIntro"></p>
   </header>
   <section class="panel">
-    <div class="tm-row" id="tmRowTouch"><div><strong data-i="tmTouch"></strong><div class="tm-res" id="tmTouchRes"></div></div><button class="btn solid" id="tmTouchBtn" data-i="start"></button></div>
-    <div class="tm-row" id="tmRowPixels"><div><strong data-i="tmPixels"></strong><div class="tm-res" id="tmPixRes"></div></div><button class="btn solid" id="tmPixBtn" data-i="start"></button></div>
+    <div id="tmRows"></div>
     <div class="tm-ask" id="tmAsk" hidden>
-      <strong data-i="tmAskQ"></strong>
-      <div class="actions"><button class="btn send-wa" id="tmNo" data-i="tmNo"></button><button class="btn" id="tmYes" data-i="tmYes"></button></div>
+      <strong id="tmAskQ"></strong>
+      <div class="actions"><button class="btn send-wa" id="tmYesOk"></button><button class="btn" id="tmNoBad"></button></div>
     </div>
   </section>
   <section class="panel" id="tmDone" hidden>
     <h2 data-i="tmDoneTitle"></h2>
-    <p class="muted" style="margin:0" data-i="tmDoneHint"></p>
+    <p class="muted" data-i="tmDoneHint"></p>
     <div class="qr" id="tmQr"></div>
   </section>
 </div>
@@ -383,173 +401,200 @@ textarea { width: 100%; min-height: 96px; font: 16px/1.45 var(--body); padding: 
 const UI = {
   es: {
     eyebrow: "Hoja de inspección · iPhone usado", title: "Revisión iPhone",
-    intro: "Marca cada punto como OK o Falla. Abre esta página en el iPhone que revisas para hacer las pruebas de pantalla táctil y píxeles desde el mismo equipo. No se guarda nada: al terminar, envía el reporte por WhatsApp o correo, o cópialo.",
+    intro: "Sigue los pasos en orden: primero lo que tumba una compra, después lo que baja el precio y al final las pruebas de funcionamiento. No se guarda nada: al terminar, envía el reporte por WhatsApp o correo, o cópialo.",
     checked: "Revisado", fails: "Fallas", pending: "Pendiente", approved: "Aprobado", fail1: "1 falla", failN: n => n + " fallas",
-    decTitle: "Estado según número de modelo",
+    apTitle: "Modelo y fecha de compra", apPath: "Ajustes › General › Información › Número de serie (mantenlo presionado para copiarlo)",
+    apOpen: "Abrir checkcoverage.apple.com", apModel: "Modelo completo que muestra Apple", apDate: "Fecha de compra",
+    dtBuy: "Fecha de compra", dtWar: "Fin de garantía",
+    apHint: "Pega el serial en la página de Apple y anota el modelo y la fecha. Si Apple solo muestra cuándo termina la garantía, elige «Fin de garantía» y la página calcula la compra (1 año antes). «Fecha de compra no validada» quiere decir que Apple no tiene registro de la venta.",
+    phModel: "Ej. iPhone 14 Pro 128 GB",
+    sFull: "Modelo (Apple)", sDate: "Compra", estimated: "estimada",
+    age: (y, m) => [y ? `${y} ${y === 1 ? "año" : "años"}` : "", m ? `${m} ${m === 1 ? "mes" : "meses"}` : ""].filter(Boolean).join(" y ") || "menos de 1 mes",
+    ageSentence: (d, a, est) => `Comprado el ${d}${est}, por lo tanto tiene ${a} de uso`, ofUse: "de uso",
+    modelLabel: "Número de modelo (tipo de venta)",
     decPath: "Ajustes › General › Información › toca «Modelo» hasta ver el número que termina en /A",
-    modelLabel: "Número de modelo",
     decEmpty: ["Escribe el número de modelo", "La primera letra indica cómo se vendió el equipo."],
     decUnknown: ["Prefijo no reconocido", "Copia el número que empieza con letra (ej. MQ9X3LL/A), no el que empieza con «A» seguido de 4 dígitos."],
     region: "Región",
-    batTitle: "Batería", batPath: "Ajustes › Batería › Estado y carga (los ciclos aparecen en Ajustes › General › Información, iPhone 15 o más nuevo)",
+    batTitle: "Batería", batPath: "Ajustes › Batería › Estado y carga (los ciclos están en Ajustes › General › Información en iPhone 15 o más nuevo)",
     health: "Capacidad máxima", cycles: "Ciclos de carga", cycUnit: "ciclos",
     cycHint: "Apple calcula ~500 ciclos (hasta iPhone 14) o ~1000 (iPhone 15+) para llegar al 80 %.",
     hNone: "Sin dato", hExc: "Excelente", hGood: "Buena", hFair: "Aceptable", hBad: "Cambiar batería",
     cNone: "Sin dato", cLow: "Pocos ciclos", cMid: "Uso medio", cHigh: "Muy usada",
-    notesTitle: "Notas", notesLabel: "Observaciones (rayones, precio acordado, accesorios…)",
-    notesPh: "Ej. rayón leve en esquina inferior izquierda, incluye caja y cable",
-    sumTitle: "Resumen", sModel: "Modelo", sState: "Estado de venta", sBatt: "Batería", sRegion: "Región",
+    phTitle: "Estado físico", phHint: "Califica cada parte: A como nuevo, B rayones leves, C golpes o rayones visibles.",
+    parts: { screen: "Pantalla", frame: "Marco y bordes", back: "Parte trasera" }, sPhys: "Estado físico",
+    priceTitle: "Precio y notas", priceLabel: "Precio acordado", sPrice: "Precio acordado",
+    notesLabel: "Observaciones (accesorios, caja, detalles…)", notesPh: "Ej. incluye caja y cable, rayón leve en la esquina",
+    sumTitle: "Resumen", sModel: "Número de modelo", sState: "Tipo de venta", sBatt: "Batería", sRegion: "Región",
     vGood: "✓ Aprobado: todo funciona", vFail: n => `✗ ${n} ${n === 1 ? "falla" : "fallas"}: revisar antes de comprar`, vPending: n => `Faltan ${n} puntos por revisar`,
     copy: "Copiar reporte", reset: "Nuevo chequeo", resetConfirm: "Toca otra vez para empezar de cero",
     share: "Compartir…", sendWa: "Enviar por WhatsApp", sendMail: "Enviar por correo", mailSubject: "Reporte revisión iPhone",
     copied: "Reporte copiado", copyFail: "Reporte seleccionado: cópialo manualmente",
     start: "Iniciar prueba", exit: "Salir", tap: "toca para seguir", notesR: "Notas", reportTitle: "REVISIÓN iPHONE",
-    qrTitle: "Prueba en el celular del cliente",
-    qrIntro: "El cliente escanea este código con la cámara de su iPhone y hace la prueba ahí. Al terminar, su pantalla muestra el resultado y otro código para escanear con tu celular (se abre en una página nueva, por eso conviene hacerlo al inicio).",
-    apTitle: "Modelo y fecha de compra (Apple)", apPath: "Ajustes › General › Información › Número de serie (mantenlo presionado para copiarlo)",
-    apOpen: "Abrir checkcoverage.apple.com", apSerial: "Número de serie", apModel: "Modelo completo que muestra Apple", apDate: "Fecha de compra",
-    dtBuy: "Fecha de compra", dtWar: "Fin de garantía",
-    apHint: "Pega el serial en la página de Apple y anota el modelo y la fecha. Si Apple solo muestra cuándo termina la garantía, elige «Fin de garantía» y la página calcula la compra (1 año antes). «Fecha de compra no validada» quiere decir que Apple no tiene registro de la venta.",
-    phSerial: "Ej. DNQXXXXXXXXX", phModel: "Ej. iPhone 14 Pro 128 GB",
-    sSerial: "Serial", sFull: "Modelo (Apple)", sDate: "Compra", estimated: "estimada",
-    ageNone: "Sin fecha", age: (y, m) => [y ? `${y} ${y === 1 ? "año" : "años"}` : "", m ? `${m} ${m === 1 ? "mes" : "meses"}` : ""].filter(Boolean).join(" y ") || "menos de 1 mes",
-    ageSentence: (d, a, est) => `Comprado el ${d}${est}, por lo tanto tiene ${a} de uso`, ofUse: "de uso",
-    qrShow: "Mostrar código QR", imported: "✓ Resultado de pantalla cargado desde el otro celular",
-    tmEyebrow: "Modo prueba de pantalla", tmTitle: "Prueba de pantalla",
-    tmIntro: "Haz las dos pruebas en este celular. Al terminar aparece un código QR para escanear con el celular que lleva el checklist.",
-    tmTouch: "Táctil (pintar todos los cuadros)", tmPixels: "Píxeles y manchas (colores)",
-    tmAskQ: "¿Viste puntos, manchas o sombras en algún color?", tmNo: "No, se ve bien", tmYes: "Sí, tiene fallas",
-    tmPending: "Pendiente", tmDoneTitle: "Resultado listo", tmDoneHint: "Escanea este código con la cámara del celular que lleva el checklist.",
-    madeBy: "Hecho por", custom: "¿Quieres una página personalizada?", waMsg: "Hola, vi la página Revisión iPhone y quiero una página personalizada.",
     colors: ["Rojo", "Verde", "Azul", "Blanco", "Negro", "Gris"],
+    qrShow: "Mostrar código QR",
+    qrIntro: "El cliente escanea este código con la cámara de su iPhone y hace la prueba ahí. Al terminar, su pantalla muestra el resultado y otro código para escanear con tu celular (se abre en una página nueva, por eso conviene hacerlo al inicio).",
+    imported: "✓ Resultado cargado desde el celular del cliente",
+    tmEyebrow: "Modo prueba", tmTitle: "Prueba del celular",
+    tmIntro: "Haz las pruebas en este celular. Quita el modo silencio y sube el volumen. Al terminar aparece un código QR para escanear con el celular que lleva el checklist.",
+    tmPending: "Pendiente", tmDoneTitle: "Resultado listo", tmDoneHint: "Escanea este código con la cámara del celular que lleva el checklist.",
+    yesOk: "Sí, bien", noBad: "No, tiene fallas",
+    ask: { pixels: "¿Se vio bien en todos los colores, sin puntos, manchas ni sombras?", speakers: "¿Sonaron bien los dos altavoces y los bajos, sin ruido ni distorsión?", mic: "¿Se escuchó clara la grabación?" },
+    spk: ["Barrido de tonos (ambos altavoces)…", "Altavoz izquierdo…", "Altavoz derecho…", "Bajos…", "Listo"],
+    spkHint: "Quita el modo silencio y sube el volumen al máximo.",
+    yt: "Video de prueba en YouTube",
+    mic: { rec: "Grabando 4 segundos: habla cerca del celular…", play: "Reproduciendo la grabación…", done: "Listo", denied: "No se pudo usar el micrófono. Permite el acceso o prueba con la app Notas de voz." },
+    doneMark: "Listo: marca OK o FALLA",
+    madeBy: "Hecho por", custom: "¿Quieres una página personalizada?", waMsg: "Hola, vi la página Revisión iPhone y quiero una página personalizada.",
     prefix: { M: ["Nuevo (venta retail)", "Vendido nuevo por Apple o un distribuidor. Es lo ideal."], F: ["Reacondicionado", "Reparado y revendido por Apple o un operador. Funciona bien pero no es de primera mano; debe costar menos."], N: ["Reemplazo", "Equipo que Apple entregó como cambio en garantía. Es normal, pero confirma que coincida con la caja."], P: ["Personalizado", "Comprado nuevo con grabado. Revisa que la parte trasera tenga el grabado."], "3": ["Demo de exhibición", "Unidad de tienda: muchas horas encendida y batería gastada. Debe costar bastante menos."] },
     legend: { M: "Nuevo", F: "Reacondicionado", N: "Reemplazo (garantía)", P: "Personalizado (grabado)", "3": "Demo de exhibición" }
   },
   en: {
     eyebrow: "Inspection sheet · Used iPhone", title: "iPhone Check",
-    intro: "Mark each point as OK or Fail. Open this page on the iPhone you are checking to run the touch and pixel tests on the device itself. Nothing is saved: when you finish, send the report by WhatsApp or email, or copy it.",
+    intro: "Follow the steps in order: first what kills a deal, then what lowers the price, and last the function tests. Nothing is saved: when you finish, send the report by WhatsApp or email, or copy it.",
     checked: "Checked", fails: "Fails", pending: "Pending", approved: "Passed", fail1: "1 fail", failN: n => n + " fails",
-    decTitle: "Status from model number",
+    apTitle: "Model and purchase date", apPath: "Settings › General › About › Serial Number (long-press to copy it)",
+    apOpen: "Open checkcoverage.apple.com", apModel: "Full model shown by Apple", apDate: "Purchase date",
+    dtBuy: "Purchase date", dtWar: "Warranty end",
+    apHint: "Paste the serial on Apple's page and write down the model and date. If Apple only shows when the warranty ends, choose «Warranty end» and the page works out the purchase (1 year earlier). «Purchase date not validated» means Apple has no record of the sale.",
+    phModel: "E.g. iPhone 14 Pro 128 GB",
+    sFull: "Model (Apple)", sDate: "Purchased", estimated: "estimated",
+    age: (y, m) => [y ? `${y} ${y === 1 ? "year" : "years"}` : "", m ? `${m} ${m === 1 ? "month" : "months"}` : ""].filter(Boolean).join(" ") || "under 1 month",
+    ageSentence: (d, a, est) => `Purchased on ${d}${est}, so it has ${a} of use`, ofUse: "of use",
+    modelLabel: "Model number (sale type)",
     decPath: "Settings › General › About › tap «Model Number» until you see the one ending in /A",
-    modelLabel: "Model number",
     decEmpty: ["Enter the model number", "The first letter tells how the device was sold."],
     decUnknown: ["Prefix not recognized", "Copy the number that starts with a letter (e.g. MQ9X3LL/A), not the one that starts with «A» plus 4 digits."],
     region: "Region",
-    batTitle: "Battery", batPath: "Settings › Battery › Battery Health & Charging (cycle count is in Settings › General › About, iPhone 15 or newer)",
+    batTitle: "Battery", batPath: "Settings › Battery › Battery Health & Charging (cycle count is in Settings › General › About on iPhone 15 or newer)",
     health: "Maximum capacity", cycles: "Charge cycles", cycUnit: "cycles",
     cycHint: "Apple rates ~500 cycles (up to iPhone 14) or ~1000 (iPhone 15+) to reach 80 %.",
     hNone: "No data", hExc: "Excellent", hGood: "Good", hFair: "Fair", hBad: "Replace battery",
     cNone: "No data", cLow: "Low cycles", cMid: "Moderate use", cHigh: "Heavily used",
-    notesTitle: "Notes", notesLabel: "Remarks (scratches, agreed price, accessories…)",
-    notesPh: "E.g. light scratch on bottom-left corner, comes with box and cable",
-    sumTitle: "Summary", sModel: "Model", sState: "Sale status", sBatt: "Battery", sRegion: "Region",
+    phTitle: "Physical condition", phHint: "Grade each part: A like new, B light scratches, C dents or visible scratches.",
+    parts: { screen: "Screen", frame: "Frame and edges", back: "Back" }, sPhys: "Condition",
+    priceTitle: "Price and notes", priceLabel: "Agreed price", sPrice: "Agreed price",
+    notesLabel: "Remarks (accessories, box, details…)", notesPh: "E.g. comes with box and cable, light scratch on a corner",
+    sumTitle: "Summary", sModel: "Model number", sState: "Sale type", sBatt: "Battery", sRegion: "Region",
     vGood: "✓ Passed: everything works", vFail: n => `✗ ${n} ${n === 1 ? "fail" : "fails"}: review before buying`, vPending: n => `${n} points left to check`,
     copy: "Copy report", reset: "New check", resetConfirm: "Tap again to start over",
     share: "Share…", sendWa: "Send by WhatsApp", sendMail: "Send by email", mailSubject: "iPhone check report",
     copied: "Report copied", copyFail: "Report selected: copy it manually",
     start: "Start test", exit: "Exit", tap: "tap to continue", notesR: "Notes", reportTitle: "iPHONE CHECK",
-    qrTitle: "Test on the client's phone",
-    qrIntro: "The client scans this code with their iPhone camera and runs the test there. When done, their screen shows the result and another code to scan with your phone (it opens in a new page, so do it first).",
-    apTitle: "Model and purchase date (Apple)", apPath: "Settings › General › About › Serial Number (long-press to copy it)",
-    apOpen: "Open checkcoverage.apple.com", apSerial: "Serial number", apModel: "Full model shown by Apple", apDate: "Purchase date",
-    dtBuy: "Purchase date", dtWar: "Warranty end",
-    apHint: "Paste the serial on Apple's page and write down the model and date. If Apple only shows when the warranty ends, choose «Warranty end» and the page works out the purchase (1 year earlier). «Purchase date not validated» means Apple has no record of the sale.",
-    phSerial: "E.g. DNQXXXXXXXXX", phModel: "E.g. iPhone 14 Pro 128 GB",
-    sSerial: "Serial", sFull: "Model (Apple)", sDate: "Purchased", estimated: "estimated",
-    ageNone: "No date", age: (y, m) => [y ? `${y} ${y === 1 ? "year" : "years"}` : "", m ? `${m} ${m === 1 ? "month" : "months"}` : ""].filter(Boolean).join(" ") || "under 1 month",
-    ageSentence: (d, a, est) => `Purchased on ${d}${est}, so it has ${a} of use`, ofUse: "of use",
-    qrShow: "Show QR code", imported: "✓ Screen result loaded from the other phone",
-    tmEyebrow: "Screen test mode", tmTitle: "Screen test",
-    tmIntro: "Run both tests on this phone. When done, a QR code appears to scan with the phone that has the checklist.",
-    tmTouch: "Touch (paint every square)", tmPixels: "Pixels and spots (colors)",
-    tmAskQ: "Did you see dots, spots or shadows on any color?", tmNo: "No, looks good", tmYes: "Yes, it has defects",
-    tmPending: "Pending", tmDoneTitle: "Result ready", tmDoneHint: "Scan this code with the camera of the phone that has the checklist.",
-    madeBy: "Made by", custom: "Want a custom page?", waMsg: "Hi, I saw the iPhone Check page and I'd like a custom page.",
     colors: ["Red", "Green", "Blue", "White", "Black", "Gray"],
+    qrShow: "Show QR code",
+    qrIntro: "The client scans this code with their iPhone camera and runs the test there. When done, their screen shows the result and another code to scan with your phone (it opens in a new page, so do it first).",
+    imported: "✓ Result loaded from the client's phone",
+    tmEyebrow: "Test mode", tmTitle: "Phone test",
+    tmIntro: "Run the tests on this phone. Turn off silent mode and raise the volume. When done, a QR code appears to scan with the phone that has the checklist.",
+    tmPending: "Pending", tmDoneTitle: "Result ready", tmDoneHint: "Scan this code with the camera of the phone that has the checklist.",
+    yesOk: "Yes, fine", noBad: "No, it has defects",
+    ask: { pixels: "Did every color look right, with no dots, spots or shadows?", speakers: "Did both speakers and the bass sound right, with no noise or distortion?", mic: "Was the recording clear?" },
+    spk: ["Tone sweep (both speakers)…", "Left speaker…", "Right speaker…", "Bass…", "Done"],
+    spkHint: "Turn off silent mode and raise the volume to max.",
+    yt: "Test video on YouTube",
+    mic: { rec: "Recording 4 seconds: speak close to the phone…", play: "Playing the recording…", done: "Done", denied: "Couldn't use the microphone. Allow access or try the Voice Memos app." },
+    doneMark: "Done: mark OK or FAIL",
+    madeBy: "Made by", custom: "Want a custom page?", waMsg: "Hi, I saw the iPhone Check page and I'd like a custom page.",
     prefix: { M: ["New (retail)", "Sold new by Apple or a reseller. This is the best case."], F: ["Refurbished", "Repaired and resold by Apple or a carrier. Works fine but is not first-hand; it should cost less."], N: ["Replacement", "Unit Apple gave as a warranty swap. Normal, but check that it matches the box."], P: ["Personalized", "Bought new with engraving. Check that the back has the engraving."], "3": ["Display demo", "Store unit: many hours powered on and a worn battery. It should cost much less."] },
     legend: { M: "New", F: "Refurbished", N: "Replacement (warranty)", P: "Personalized (engraved)", "3": "Display demo" }
   }
 };
 const LETTER_CLASS = { M: "M", F: "F", N: "N", P: "P", "3": "D" };
 const REGION = { "LL/A": ["EE. UU.", "USA"], "LZ/A": ["Chile / Paraguay / Uruguay", "Chile / Paraguay / Uruguay"], "BZ/A": ["Brasil", "Brazil"], "CH/A": ["China", "China"], "ZA/A": ["Singapur", "Singapore"], "ZP/A": ["Hong Kong / Macao", "Hong Kong / Macau"], "J/A": ["Japón", "Japan"], "B/A": ["Reino Unido", "United Kingdom"], "ZD/A": ["Europa", "Europe"], "C/A": ["Canadá", "Canada"], "VC/A": ["Canadá", "Canada"], "X/A": ["Australia", "Australia"] };
+const YT = "https://www.youtube.com/results?search_query=speaker+test+sound+stereo+bass";
 
+/* Orden de la revisión: n = número de paso en pantalla. Los pasos 2 a 4 son los paneles de arriba. */
 const SECTIONS = [
-  { id: "id", es: "Identidad y bloqueos", en: "Identity and locks", items: [
-    { k: "apple", es: ["Serial válido en Apple", "En checkcoverage.apple.com (panel de arriba) el modelo que aparece debe ser el mismo del teléfono."], en: ["Serial valid at Apple", "On checkcoverage.apple.com (panel above) the model shown must match the phone."] },
-    { k: "prefix", es: ["Prefijo del modelo aceptable", "Revisa el decodificador de arriba: M nuevo, F reacondicionado, N reemplazo, P personalizado."], en: ["Model prefix acceptable", "See the decoder above: M new, F refurbished, N replacement, P personalized."] },
-    { k: "sim", es: ["Libre de operador", "Ajustes › General › Información › baja hasta «Bloqueo del operador»: debe decir «Sin restricciones de SIM»."], en: ["Carrier unlocked", "Settings › General › About › scroll to «Carrier Lock»: it must say «No SIM restrictions»."] },
+  { id: "lock", n: 1, top: true, es: "Bloqueos y reportes", en: "Locks and reports", items: [
     { k: "icloud", es: ["iCloud y Buscar desactivados", "Ajustes › [nombre] › Buscar › Buscar mi iPhone en OFF. Si sigue con la cuenta del dueño anterior, no lo compres."], en: ["iCloud and Find My off", "Settings › [name] › Find My › Find My iPhone OFF. If it still has the previous owner's account, don't buy it."] },
-    { k: "imei", es: ["IMEI coincide", "Marca *#06# y compara con Ajustes › General › Información y con la caja o la bandeja SIM."], en: ["IMEI matches", "Dial *#06# and compare with Settings › General › About and with the box or SIM tray."] }
+    { k: "stolen", links: true, es: ["Sin reportes de robo o pérdida", "Marca *#06# para ver el IMEI y búscalo en la consulta oficial de tu país. Debe salir limpio, sin reportes."], en: ["No theft or loss reports", "Dial *#06# to see the IMEI and look it up on your country's official checker. It must come back clean."] },
+    { k: "sim", es: ["Libre de operador", "Ajustes › General › Información › baja hasta «Bloqueo del operador»: debe decir «Sin restricciones de SIM»."], en: ["Carrier unlocked", "Settings › General › About › scroll to «Carrier Lock»: it must say «No SIM restrictions»."] },
+    { k: "imei", es: ["IMEI coincide", "Compara el IMEI de *#06# con Ajustes › General › Información y con la caja o la bandeja SIM."], en: ["IMEI matches", "Compare the *#06# IMEI with Settings › General › About and with the box or SIM tray."] }
   ]},
-  { id: "parts", es: "Piezas y batería", en: "Parts and battery", items: [
-    { k: "history", es: ["Sin piezas desconocidas", "Ajustes › General › Información › «Historial de piezas y servicio». «Pieza genuina de Apple» está bien; «Pieza desconocida» indica reparación no oficial."], en: ["No unknown parts", "Settings › General › About › «Parts and Service History». «Genuine Apple Part» is fine; «Unknown Part» means a non-official repair."] },
-    { k: "battery", es: ["Salud de batería 80 % o más", "Se marca sola al escribir la capacidad en el panel Batería."], en: ["Battery health 80 % or more", "Marked automatically when you enter the capacity in the Battery panel."] }
+  { id: "parts", n: 5, es: "Piezas y daños", en: "Parts and damage", items: [
+    { k: "apple", es: ["Serial válido en Apple", "En checkcoverage.apple.com (paso 2) el modelo que aparece debe ser el mismo del teléfono."], en: ["Serial valid at Apple", "On checkcoverage.apple.com (step 2) the model shown must match the phone."] },
+    { k: "battery", es: ["Salud de batería 80 % o más", "Se marca sola al escribir la capacidad en el paso 3."], en: ["Battery health 80 % or more", "Marked automatically when you enter the capacity in step 3."] },
+    { k: "notorig", es: ["Sin avisos de pieza no original", "Revisa Ajustes › Batería y Ajustes › General › Información. No debe aparecer «Batería no original», «Pantalla no original» ni «Pieza desconocida»."], en: ["No non-genuine part warnings", "Check Settings › Battery and Settings › General › About. There must be no «Unknown Part» or non-genuine battery or display message."] },
+    { k: "history", es: ["Historial de piezas limpio", "Ajustes › General › Información › «Historial de piezas y servicio». «Pieza genuina de Apple» está bien; otra cosa indica reparación."], en: ["Clean parts history", "Settings › General › About › «Parts and Service History». «Genuine Apple Part» is fine; anything else means a repair."] },
+    { k: "water", es: ["Sin daño por agua", "Saca la bandeja de la SIM y alumbra adentro con una linterna. El indicador debe verse blanco o plateado; si está rojo o rosado, se mojó."], en: ["No water damage", "Remove the SIM tray and shine a light inside. The indicator must look white or silver; red or pink means it got wet."] },
+    { k: "storage", es: ["Almacenamiento correcto", "Ajustes › General › Información › Capacidad. Debe ser la misma que ofrece el vendedor (128, 256 GB…)."], en: ["Storage is correct", "Settings › General › About › Capacity. It must match what the seller offers (128, 256 GB…)."] },
+    { k: "prefix", es: ["Tipo de venta aceptable", "Revisa el número de modelo en el paso 2: M nuevo, F reacondicionado, N reemplazo, P personalizado."], en: ["Sale type acceptable", "Check the model number in step 2: M new, F refurbished, N replacement, P personalized."] }
   ]},
-  { id: "display", es: "Pantalla", en: "Display", items: [
+  { id: "display", n: 6, es: "Pantalla", en: "Display", items: [
     { k: "touch", tool: "touch", es: ["Táctil 100 % funcional", "Pinta todos los cuadros con el dedo. Además, mantén presionada una app y arrástrala por toda la pantalla sin que se suelte."], en: ["Touch 100 % working", "Paint every square with your finger. Also long-press an app and drag it across the whole screen without it dropping."] },
     { k: "pixels", tool: "colors", es: ["Sin píxeles muertos ni manchas", "Toca para pasar por rojo, verde, azul, blanco, negro y gris. Busca puntos, manchas amarillas o sombras."], en: ["No dead pixels or spots", "Tap through red, green, blue, white, black and gray. Look for dots, yellow spots or shadows."] },
     { k: "truetone", es: ["True Tone se puede activar", "Abre el Centro de control, mantén presionado el brillo y activa True Tone. Si no aparece, la pantalla fue cambiada."], en: ["True Tone can be enabled", "Open Control Center, long-press brightness and turn on True Tone. If it's missing, the screen was replaced."] },
     { k: "bright", es: ["Brillo y bordes", "Sube y baja el brillo al máximo. Revisa que no haya líneas, parpadeo ni bordes levantados."], en: ["Brightness and edges", "Move brightness to max and min. Check for lines, flicker or lifted edges."] }
   ]},
-  { id: "faceid", es: "Face ID", en: "Face ID", items: [
+  { id: "faceid", n: 7, es: "Face ID", en: "Face ID", items: [
     { k: "faceset", es: ["Face ID se configura", "Ajustes › Face ID y código › Configurar Face ID. Si dice «Face ID no está disponible», está dañado."], en: ["Face ID sets up", "Settings › Face ID & Passcode › Set Up Face ID. If it says «Face ID is not available», it's damaged."] },
     { k: "faceunlock", es: ["Desbloquea con la cara", "Bloquea el equipo y desbloquéalo mirándolo varias veces."], en: ["Unlocks with face", "Lock the device and unlock it by looking at it several times."] }
   ]},
-  { id: "camera", es: "Cámaras", en: "Cameras", items: [
+  { id: "camera", n: 8, es: "Cámaras", en: "Cameras", items: [
     { k: "rear", es: ["Todas las lentes traseras", "En la app Cámara cambia entre 0.5×, 1×, 2× / 3× / 5×. Enfoca algo cercano y lejano; no debe vibrar ni sonar."], en: ["All rear lenses", "In the Camera app switch between 0.5×, 1×, 2× / 3× / 5×. Focus near and far; it must not shake or rattle."] },
     { k: "front", es: ["Cámara frontal y retrato", "Toma una selfie normal y en modo Retrato."], en: ["Front camera and portrait", "Take a normal selfie and one in Portrait mode."] },
     { k: "flash", es: ["Flash y linterna", "Enciende la linterna desde el Centro de control y toma una foto con flash."], en: ["Flash and flashlight", "Turn on the flashlight from Control Center and take a photo with flash."] },
     { k: "video", es: ["Video con audio", "Graba un video corto con cada cámara y reprodúcelo: imagen estable y sonido claro."], en: ["Video with audio", "Record a short video with each camera and play it back: stable image and clear sound."] }
   ]},
-  { id: "buttons", es: "Botones", en: "Buttons", items: [
+  { id: "audio", n: 9, es: "Sonido y vibración", en: "Sound and vibration", items: [
+    { k: "speakers", tool: "speaker", es: ["Altavoces arriba y abajo", "La prueba suena por los dos altavoces, luego por cada lado y luego bajos. Tapa cada altavoz para confirmar que ambos suenan sin distorsión."], en: ["Top and bottom speakers", "The test plays on both speakers, then each side, then bass. Cover each speaker to confirm both play without distortion."] },
+    { k: "mic", tool: "mic", es: ["Micrófono", "La prueba graba 4 segundos y los reproduce. La voz debe oírse clara."], en: ["Microphone", "The test records 4 seconds and plays them back. The voice must sound clear."] },
+    { k: "ear", es: ["Auricular en llamada", "Haz una llamada y escucha con el equipo pegado a la oreja."], en: ["Earpiece on calls", "Make a call and listen with the phone against your ear."] },
+    { k: "vibe", es: ["Vibración", "Activa y desactiva el modo silencio o recibe una llamada."], en: ["Vibration", "Toggle silent mode or receive a call."] }
+  ]},
+  { id: "buttons", n: 10, es: "Botones", en: "Buttons", items: [
     { k: "vol", es: ["Volumen + y −", "Cada botón debe hacer clic firme y cambiar el volumen."], en: ["Volume + and −", "Each button must click firmly and change the volume."] },
     { k: "power", es: ["Botón lateral", "Bloquea, desbloquea y doble clic para Apple Pay o Siri."], en: ["Side button", "Lock, unlock and double-click for Apple Pay or Siri."] },
     { k: "switch", es: ["Interruptor de silencio o botón de Acción", "Cambia entre sonido y silencio; debe vibrar al cambiar."], en: ["Ring/Silent switch or Action button", "Toggle between ring and silent; it must vibrate when switching."] },
     { k: "camctrl", es: ["Control de Cámara (iPhone 16 o más nuevo)", "Presiona y desliza el botón para abrir la cámara y hacer zoom. Marca OK si el modelo no lo tiene."], en: ["Camera Control (iPhone 16 or newer)", "Press and slide the button to open the camera and zoom. Mark OK if the model doesn't have it."] }
   ]},
-  { id: "audio", es: "Sonido y vibración", en: "Sound and vibration", items: [
-    { k: "speakers", es: ["Altavoces arriba y abajo", "Reproduce música al máximo y tapa cada altavoz: deben sonar ambos sin distorsión."], en: ["Top and bottom speakers", "Play music at max volume and cover each speaker: both must play without distortion."] },
-    { k: "mic", es: ["Micrófonos", "Graba una nota de voz y un video con la cámara frontal; escucha que se oiga claro."], en: ["Microphones", "Record a voice memo and a front-camera video; check that it sounds clear."] },
-    { k: "ear", es: ["Auricular en llamada", "Haz una llamada y escucha con el equipo pegado a la oreja."], en: ["Earpiece on calls", "Make a call and listen with the phone against your ear."] },
-    { k: "vibe", es: ["Vibración", "Activa y desactiva el silencio o recibe una llamada."], en: ["Vibration", "Toggle silent mode or receive a call."] }
-  ]},
-  { id: "conn", es: "Conexión y sensores", en: "Connectivity and sensors", items: [
+  { id: "conn", n: 11, es: "Conexión y sensores", en: "Connectivity and sensors", items: [
     { k: "signal", es: ["SIM y señal", "Inserta una SIM: debe mostrar barras de señal y poder llamar y usar datos."], en: ["SIM and signal", "Insert a SIM: it must show signal bars and be able to call and use data."] },
     { k: "wifi", es: ["Wi-Fi y Bluetooth", "Conéctate a una red y empareja un audífono o reloj."], en: ["Wi-Fi and Bluetooth", "Join a network and pair headphones or a watch."] },
     { k: "charge", es: ["Carga por cable e inalámbrica", "Conecta el cable y pon el equipo en un cargador MagSafe o Qi: debe aparecer el rayo."], en: ["Wired and wireless charging", "Plug in the cable and place it on a MagSafe or Qi charger: the bolt must appear."] },
     { k: "prox", es: ["Sensor de proximidad", "En una llamada, tapa la parte superior: la pantalla debe apagarse."], en: ["Proximity sensor", "During a call, cover the top: the screen must turn off."] },
     { k: "gyro", es: ["Rotación y brillo automático", "Gira el equipo en una app con giro de pantalla y tapa el sensor para ver el ajuste de brillo."], en: ["Rotation and auto-brightness", "Rotate the phone in an app that rotates and cover the sensor to see brightness adjust."] }
+  ]},
+  { id: "close", n: 12, es: "Al cerrar la compra", en: "When closing the deal", items: [
+    { k: "signout", es: ["El vendedor cerró sesión en iCloud", "Delante de ti: Ajustes › [nombre] › Cerrar sesión, con la contraseña de su Apple ID."], en: ["Seller signed out of iCloud", "In front of you: Settings › [name] › Sign Out, with their Apple ID password."] },
+    { k: "erase", es: ["Equipo borrado de fábrica", "Ajustes › General › Transferir o restablecer el iPhone › Borrar contenido y configuración. Al reiniciar debe salir la pantalla de «Hola»."], en: ["Factory erased", "Settings › General › Transfer or Reset iPhone › Erase All Content and Settings. After restart the «Hello» screen must appear."] }
   ]}
 ];
+const STOLEN_LINKS = [
+  ["https://www.stolenphonechecker.org/", { es: "Consulta EE. UU. (CTIA)", en: "US checker (CTIA)" }],
+  ["https://www.imeicolombia.com.co/", { es: "Consulta Colombia (CRC)", en: "Colombia checker (CRC)" }]
+];
+const GRADE_PARTS = ["screen", "frame", "back"];
+const TESTS = ["touch", "pixels", "speakers", "mic"];
+const TOOL_OF = { touch: "touch", pixels: "colors", speakers: "speaker", mic: "mic" };
 
 /* No se guarda ningún dato del chequeo; solo el idioma elegido */
 const LANG_KEY = "revision-iphone-lang";
-const EMPTY = () => ({ s: {}, model: "", notes: "", health: "", cycles: "", fullModel: "", buyDate: "", dateKind: "buy" });
+const EMPTY = () => ({ s: {}, model: "", notes: "", health: "", cycles: "", fullModel: "", buyDate: "", dateKind: "buy", grade: {}, price: "" });
 let st = Object.assign(EMPTY(), { lang: "es" });
 try { const l = localStorage.getItem(LANG_KEY); if (l === "es" || l === "en") st.lang = l; } catch (e) {}
 const save = () => { try { localStorage.setItem(LANG_KEY, st.lang); } catch (e) {} };
 
-/* QR: el iPhone revisado abre ?modo=pantalla; al terminar muestra un QR con ?touch=..&pixels=.. */
+/* QR: el celular del cliente abre ?modo=pantalla&prueba=..; al terminar muestra un QR con los resultados */
 const SITE = "https://johannbarajas.github.io/CHECK_PHONE/";
 const BASE = location.hostname.endsWith("github.io") ? location.origin + location.pathname : SITE;
 const params = new URLSearchParams(location.search);
 const TEST_MODE = params.get("modo") === "pantalla";
-const ONLY = ["touch", "pixels"].includes(params.get("prueba")) ? params.get("prueba") : "";
-const NEEDED = ONLY ? [ONLY] : ["touch", "pixels"];
+const ONLY = TESTS.includes(params.get("prueba")) ? params.get("prueba") : "";
+const NEEDED = ONLY ? [ONLY] : TESTS;
 if (params.get("lang") === "es" || params.get("lang") === "en") st.lang = params.get("lang");
 let imported = false;
-["touch", "pixels"].forEach(k => { const v = params.get(k); if (v === "ok" || v === "bad") { st.s[k] = v; imported = true; } });
+TESTS.forEach(k => { const v = params.get(k); if (v === "ok" || v === "bad") { st.s[k] = v; imported = true; } });
 function drawQr(el, text) {
   el.innerHTML = "";
   if (window.QRCode) new QRCode(el, { text, width: 440, height: 440, correctLevel: QRCode.CorrectLevel.M });
   else el.textContent = text;
-  el.hidden = false;
 }
 
 const $ = id => document.getElementById(id);
 const T = () => UI[st.lang];
-const ALL = SECTIONS.flatMap(s => s.items);
-const total = ALL.length;
+const total = SECTIONS.reduce((n, s) => n + s.items.length, 0);
 
 function healthInfo() {
   const h = parseInt(st.health, 10), t = T();
@@ -565,6 +610,13 @@ function cycleInfo() {
   if (c <= 300) return { cls: "ok", label: t.cLow };
   if (c <= 600) return { cls: "warn", label: t.cMid };
   return { cls: "bad", label: t.cHigh };
+}
+function battText() {
+  const hi = healthInfo(), ci = cycleInfo(), t = T();
+  const parts = [];
+  if (hi.h) parts.push(`${hi.h} % (${hi.label})`);
+  if (ci.cls !== "none") parts.push(`${st.cycles} ${t.cycUnit} (${ci.label})`);
+  return parts.join(" · ") || "—";
 }
 /* Antigüedad: desde la fecha de compra (o fin de garantía − 1 año) hasta hoy */
 function ageInfo() {
@@ -583,19 +635,17 @@ function ageInfo() {
   return { cls, text: `${date}${est} · ${t.age(y, mo)}`, sentence: t.ageSentence(date, t.age(y, mo), est).toUpperCase(),
     big: `${t.age(y, mo)} ${t.ofUse}`.toUpperCase(), sub: `${t.sDate}: ${date}${est}` };
 }
-function battText() {
-  const hi = healthInfo(), ci = cycleInfo(), t = T();
-  const parts = [];
-  if (hi.h) parts.push(`${hi.h} % (${hi.label})`);
-  if (ci.cls !== "none") parts.push(`${st.cycles} ${t.cycUnit} (${ci.label})`);
-  return parts.join(" · ") || "—";
+function physText() {
+  const t = T();
+  const g = GRADE_PARTS.filter(p => st.grade[p]).map(p => `${t.parts[p]} ${st.grade[p]}`);
+  return g.join(" · ") || "—";
 }
 
-function renderSections() {
+function sectionHtml(sec) {
   const t = T(), L = st.lang;
-  $("sections").innerHTML = SECTIONS.map(sec => `
+  return `
     <section class="block" aria-labelledby="h-${sec.id}">
-      <div class="block-head"><h2 id="h-${sec.id}">${sec[L]}</h2><span class="count" data-count="${sec.id}"></span></div>
+      <div class="block-head"><h2 id="h-${sec.id}"><span class="n">${sec.n}</span><span>${sec[L]}</span></h2><span class="count" data-count="${sec.id}"></span></div>
       <ul class="items">${sec.items.map(it => `
         <li class="item" id="it-${it.k}">
           <div><div class="t">${it[L][0]}</div><div class="h">${it[L][1]}</div></div>
@@ -603,9 +653,12 @@ function renderSections() {
             <button class="ok" data-k="${it.k}" data-v="ok" aria-pressed="false">OK</button>
             <button class="bad" data-k="${it.k}" data-v="bad" aria-pressed="false">${L === "es" ? "FALLA" : "FAIL"}</button>
           </div>
+          ${it.links ? `<div class="tools">${STOLEN_LINKS.map(([u, n]) => `<a class="btn solid" href="${u}" target="_blank" rel="noopener">${n[L]}</a>`).join("")}</div>` : ""}
           ${it.tool ? `<div class="tools">
-            <button class="btn" data-tool="${it.tool}">${t.start}</button>
+            <button class="btn" data-tool="${it.tool}" data-key="${it.k}">${t.start}</button>
             <button class="btn solid" data-qr="${it.k}">${t.qrShow}</button>
+            ${it.tool === "speaker" ? `<a class="btn ghost" href="${YT}" target="_blank" rel="noopener">${t.yt}</a>` : ""}
+            <span class="tool-status" id="ts-${it.k}"></span>
             <div class="qr-wrap" id="qrw-${it.k}" hidden>
               <p class="muted">${t.qrIntro}</p>
               <div class="qr" id="qr-${it.k}"></div>
@@ -613,9 +666,13 @@ function renderSections() {
           </div>` : ""}
         </li>`).join("")}
       </ul>
-    </section>`).join("");
+    </section>`;
 }
-$("sections").addEventListener("click", e => {
+function renderSections() {
+  $("sectionsTop").innerHTML = SECTIONS.filter(s => s.top).map(sectionHtml).join("");
+  $("sections").innerHTML = SECTIONS.filter(s => !s.top).map(sectionHtml).join("");
+}
+function onChecklistClick(e) {
   const qb = e.target.closest("button[data-qr]");
   if (qb) {
     const k = qb.dataset.qr, w = $("qrw-" + k);
@@ -624,12 +681,31 @@ $("sections").addEventListener("click", e => {
     return;
   }
   const tool = e.target.closest("button[data-tool]");
-  if (tool) { tool.dataset.tool === "touch" ? startTouch() : startColors(); return; }
+  if (tool) { runTool(tool.dataset.key); return; }
   const b = e.target.closest("button[data-k]");
   if (!b) return;
   const { k, v } = b.dataset;
   st.s[k] = st.s[k] === v ? undefined : v;
-  save(); update();
+  update();
+}
+$("sectionsTop").addEventListener("click", onChecklistClick);
+$("sections").addEventListener("click", onChecklistClick);
+
+function renderGrades() {
+  const t = T();
+  $("grades").innerHTML = GRADE_PARTS.map(p => `
+    <div class="grade-row"><span>${t.parts[p]}</span>
+      <div class="seg" role="group" aria-label="${t.parts[p]}">
+        ${["A", "B", "C"].map(g => `<button class="g${g}" data-part="${p}" data-g="${g}" aria-pressed="${st.grade[p] === g}">${g}</button>`).join("")}
+      </div>
+    </div>`).join("");
+}
+$("grades").addEventListener("click", e => {
+  const b = e.target.closest("button[data-part]");
+  if (!b) return;
+  const { part, g } = b.dataset;
+  st.grade[part] = st.grade[part] === g ? "" : g;
+  renderGrades(); update();
 });
 
 function applyLang() {
@@ -641,14 +717,20 @@ function applyLang() {
   $("lang-en").setAttribute("aria-pressed", String(st.lang === "en"));
   $("notes").placeholder = t.notesPh;
   $("fullModel").placeholder = t.phModel;
+  $("priceN").textContent = SECTIONS[SECTIONS.length - 1].n + 1;
   $("waLink").href = "https://wa.me/17183149761?text=" + encodeURIComponent(t.waMsg);
   $("legend").innerHTML = Object.entries(t.legend).map(([k, v]) => `<li><b>${k}</b>${v}</li>`).join("");
-  renderSections();
+  renderSections(); renderGrades();
   decode(); battery(); update();
+  if (TEST_MODE) renderTestMode();
 }
 $("lang-es").onclick = () => { st.lang = "es"; save(); applyLang(); };
 $("lang-en").onclick = () => { st.lang = "en"; save(); applyLang(); };
 
+function regionOf(raw) {
+  const k = Object.keys(REGION).sort((a, b) => b.length - a.length).find(s => raw.endsWith(s));
+  return k ? `${k} (${REGION[k][st.lang === "es" ? 0 : 1]})` : "";
+}
 function decode() {
   const raw = st.model, r = $("result"), t = T();
   if (!raw) { r.innerHTML = `<div class="letter X">?</div><div><strong>${t.decEmpty[0]}</strong><span class="muted">${t.decEmpty[1]}</span></div>`; return; }
@@ -657,11 +739,6 @@ function decode() {
   const reg = regionOf(raw);
   r.innerHTML = `<div class="letter ${LETTER_CLASS[raw[0]]}">${raw[0]}</div><div><strong>${p[0]}</strong><span class="muted">${p[1]}${reg ? ` ${t.region} ${reg}.` : ""}</span></div>`;
 }
-function regionOf(raw) {
-  const k = Object.keys(REGION).sort((a, b) => b.length - a.length).find(s => raw.endsWith(s));
-  return k ? `${k} (${REGION[k][st.lang === "es" ? 0 : 1]})` : "";
-}
-
 function battery() {
   const hi = healthInfo(), ci = cycleInfo();
   $("hChip").className = "chip " + hi.cls; $("hChip").textContent = hi.label;
@@ -694,7 +771,6 @@ function update() {
   else if (done === total) { v.className = "verdict good"; v.textContent = t.approved; sv.className = "sum-verdict good"; sv.textContent = t.vGood; }
   else { v.className = "verdict pending"; v.textContent = t.pending; sv.className = "sum-verdict pending"; sv.textContent = t.vPending(total - done); }
 
-  const p = st.model && t.prefix[st.model[0]];
   const ai = ageInfo();
   $("agePop").hidden = !ai.big;
   $("agePop").className = "age-pop " + ai.cls;
@@ -704,34 +780,39 @@ function update() {
   $("sumAge").className = "sum-age " + ai.cls; $("sumAge").textContent = ai.sentence || "";
   $("dtBuy").setAttribute("aria-pressed", String(st.dateKind === "buy"));
   $("dtWar").setAttribute("aria-pressed", String(st.dateKind === "war"));
-  const head = [[t.sFull, st.fullModel || "—"], [t.sDate, ai.text || "—"], [t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"], [t.sBatt, battText()]];
-  $("sumHead").innerHTML = head.map(([a, b]) => `<div><span>${a}</span><b>${b}</b></div>`).join("");
-  $("sumList").innerHTML = SECTIONS.map(sec => `<div><h3>${sec[L]}</h3><ul>${sec.items.map(it => {
+
+  const p = st.model && t.prefix[st.model[0]];
+  const head = [[t.sFull, st.fullModel || "—"], [t.sDate, ai.text || "—"], [t.sBatt, battText()], [t.sPhys, physText()],
+    [t.sPrice, st.price || "—"], [t.sModel, st.model || "—"], [t.sState, p ? `${st.model[0]} · ${p[0]}` : "—"], [t.sRegion, (st.model && regionOf(st.model)) || "—"]];
+  $("sumHead").innerHTML = head.map(([a, b]) => `<div><span>${a}</span><b></b></div>`).join("");
+  $("sumHead").querySelectorAll("b").forEach((el, i) => { el.textContent = head[i][1]; });
+  $("sumList").innerHTML = SECTIONS.map(sec => `<div><h3>${sec.n} · ${sec[L]}</h3><ul>${sec.items.map(it => {
     const s = st.s[it.k];
     return `<li class="${s === "bad" ? "bad-row" : ""}"><span class="mk ${s || "none"}">${s === "ok" ? "✓" : s === "bad" ? "✗" : "–"}</span><span>${it[L][0]}</span></li>`;
   }).join("")}</ul></div>`).join("");
   const rep = report();
   $("report").value = rep;
   $("sendWa").href = "https://wa.me/?text=" + encodeURIComponent(rep);
-  $("sendMail").href = "mailto:?subject=" + encodeURIComponent(t.mailSubject + (st.model ? " " + st.model : "")) + "&body=" + encodeURIComponent(rep);
+  $("sendMail").href = "mailto:?subject=" + encodeURIComponent(t.mailSubject + (st.fullModel ? " " + st.fullModel : "")) + "&body=" + encodeURIComponent(rep);
 }
 
 function report() {
   const t = T(), L = st.lang;
-  const p = st.model && t.prefix[st.model[0]];
-  const lines = [t.reportTitle];
-  const ag = ageInfo();
-  if (ag.sentence) lines.push(ag.sentence, "");
-  if (st.fullModel) lines.push(`${t.sFull}: ${st.fullModel}`);
   const ai = ageInfo();
+  const lines = [t.reportTitle];
+  if (ai.sentence) lines.push(ai.sentence, "");
+  if (st.fullModel) lines.push(`${t.sFull}: ${st.fullModel}`);
   if (ai.text) lines.push(`${t.sDate}: ${ai.text}`);
-  lines.push(`${t.sModel}: ${st.model || "—"}`);
+  lines.push(`${t.sBatt}: ${battText()}`);
+  if (physText() !== "—") lines.push(`${t.sPhys}: ${physText()}`);
+  const p = st.model && t.prefix[st.model[0]];
+  if (st.model) lines.push(`${t.sModel}: ${st.model}`);
   if (p) lines.push(`${t.sState}: ${st.model[0]} · ${p[0]}`);
   const reg = st.model && regionOf(st.model);
   if (reg) lines.push(`${t.sRegion}: ${reg}`);
-  lines.push(`${t.sBatt}: ${battText()}`);
+  if (st.price) lines.push(`${t.sPrice}: ${st.price}`);
   SECTIONS.forEach(sec => {
-    lines.push("", sec[L].toUpperCase());
+    lines.push("", `${sec.n}. ${sec[L].toUpperCase()}`);
     sec.items.forEach(it => lines.push(`${st.s[it.k] === "ok" ? "✅" : st.s[it.k] === "bad" ? "❌" : "➖"} ${it[L][0]}`));
   });
   if (st.notes) lines.push("", `${t.notesR}: ${st.notes}`);
@@ -739,7 +820,20 @@ function report() {
   return lines.join("\n");
 }
 
-/* Prueba táctil */
+/* Herramientas de prueba. onDone(k) se llama al terminar; en modo prueba pregunta el resultado. */
+function status(k, text) {
+  [$("ts-" + k), $("tms-" + k)].forEach(el => { if (el) el.textContent = text; });
+}
+function finished(k) {
+  if (TEST_MODE) { if (k === "touch") { st.s.touch = touchPct === 100 ? "ok" : "bad"; renderTestMode(); } else askResult(k); }
+  else if (k !== "touch") status(k, T().doneMark);
+}
+function runTool(k) {
+  ({ touch: startTouch, pixels: startColors, speakers: playSpeaker, mic: testMic })[k]();
+}
+
+/* Táctil */
+let touchPct = 0;
 function startTouch() {
   const g = $("grid");
   const cols = 8, rows = Math.max(12, Math.round(cols * innerHeight / innerWidth));
@@ -755,21 +849,21 @@ function startTouch() {
       el.classList.add("on"); on++;
       touchPct = Math.floor(on / n * 100);
       $("gridCount").textContent = touchPct + " %";
-      if (on === n) { st.s.touch = "ok"; save(); update(); setTimeout(stopTouch, 400); }
+      if (on === n) { st.s.touch = "ok"; update(); setTimeout(stopTouch, 400); }
     }
   };
   g.onpointerdown = e => { g.setPointerCapture(e.pointerId); hit(e.clientX, e.clientY); };
   g.onpointermove = e => { if (e.buttons || e.pointerType === "touch") hit(e.clientX, e.clientY); };
   $("gridCount").textContent = "0 %";
 }
-let touchPct = 0;
 function stopTouch() {
+  if ($("grid").hidden) return;
   $("grid").hidden = true; $("gridInfo").hidden = true; $("grid").innerHTML = "";
-  if (TEST_MODE) { st.s.touch = touchPct === 100 ? "ok" : "bad"; update(); tmRefresh(); }
+  finished("touch");
 }
 $("gridExit").onclick = stopTouch;
 
-/* Prueba de colores */
+/* Colores */
 const COLORS = ["#ff0000", "#00ff00", "#0000ff", "#ffffff", "#000000", "#808080"];
 let ci = 0;
 function startColors() { ci = 0; showColor(); $("colors").hidden = false; }
@@ -778,32 +872,102 @@ $("colors").onclick = () => {
   ci++;
   if (ci < COLORS.length) { showColor(); return; }
   $("colors").hidden = true;
-  if (TEST_MODE) $("tmAsk").hidden = false;
+  finished("pixels");
 };
 
-/* Modo prueba de pantalla (en el iPhone revisado) */
-function tmRefresh() {
-  const t = T(), tr = $("tmTouchRes"), pr = $("tmPixRes");
-  tr.className = "tm-res " + (st.s.touch || "");
-  tr.textContent = st.s.touch ? `${st.s.touch === "ok" ? "✓" : "✗"} ${touchPct} %` : t.tmPending;
-  pr.className = "tm-res " + (st.s.pixels || "");
-  pr.textContent = st.s.pixels === "ok" ? "✓ " + t.tmNo : st.s.pixels === "bad" ? "✗ " + t.tmYes : t.tmPending;
-  $("tmRowTouch").hidden = ONLY === "pixels";
-  $("tmRowPixels").hidden = ONLY === "touch";
+/* Altavoces: barrido en estéreo, izquierda, derecha y bajos con Web Audio */
+let actx = null, spkBusy = false;
+function audio() {
+  actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === "suspended") actx.resume();
+  return actx;
+}
+function playSpeaker() {
+  if (spkBusy) return;
+  spkBusy = true;
+  const c = audio(), t0 = c.currentTime + .1, s = T().spk;
+  const tone = (start, dur, pan, f1, f2) => {
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = "sine";
+    o.frequency.setValueAtTime(f1, start);
+    o.frequency.exponentialRampToValueAtTime(f2, start + dur);
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(.7, start + .05);
+    g.gain.setValueAtTime(.7, start + dur - .08);
+    g.gain.linearRampToValueAtTime(0, start + dur);
+    o.connect(g);
+    if (c.createStereoPanner) { const p = c.createStereoPanner(); p.pan.value = pan; g.connect(p); p.connect(c.destination); }
+    else g.connect(c.destination);
+    o.start(start); o.stop(start + dur);
+  };
+  const steps = [[0, 3, 0, 120, 4000], [3.3, 1.6, -1, 440, 440], [5.2, 1.6, 1, 660, 660], [7.1, 2, 0, 45, 110]];
+  steps.forEach(a => tone(t0 + a[0], a[1], a[2], a[3], a[4]));
+  status("speakers", s[0] + " " + T().spkHint);
+  [3.3, 5.2, 7.1].forEach((at, i) => setTimeout(() => status("speakers", s[i + 1]), at * 1000));
+  setTimeout(() => { spkBusy = false; status("speakers", s[4]); finished("speakers"); }, 9300);
+}
+
+/* Micrófono: graba 4 segundos y reproduce */
+async function testMic() {
+  const m = T().mic;
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { status("mic", m.denied); return; }
+  let rec;
+  try { rec = new MediaRecorder(stream); } catch (e) { stream.getTracks().forEach(x => x.stop()); status("mic", m.denied); return; }
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  rec.onstop = () => {
+    stream.getTracks().forEach(x => x.stop());
+    const a = new Audio(URL.createObjectURL(new Blob(chunks, { type: rec.mimeType || "audio/mp4" })));
+    status("mic", m.play);
+    a.onended = () => { status("mic", m.done); finished("mic"); };
+    a.play().catch(() => { status("mic", m.done); finished("mic"); });
+  };
+  rec.start();
+  status("mic", m.rec);
+  setTimeout(() => rec.state !== "inactive" && rec.stop(), 4000);
+}
+
+/* Modo prueba en el celular del cliente */
+let askKey = "";
+function askResult(k) {
+  askKey = k;
+  $("tmAskQ").textContent = T().ask[k];
+  $("tmYesOk").textContent = T().yesOk;
+  $("tmNoBad").textContent = T().noBad;
+  $("tmAsk").hidden = false;
+}
+$("tmYesOk").onclick = () => { st.s[askKey] = "ok"; $("tmAsk").hidden = true; renderTestMode(); };
+$("tmNoBad").onclick = () => { st.s[askKey] = "bad"; $("tmAsk").hidden = true; renderTestMode(); };
+function itemName(k) { for (const s of SECTIONS) for (const it of s.items) if (it.k === k) return it[st.lang][0]; return k; }
+function renderTestMode() {
+  const t = T();
+  $("tmRows").innerHTML = NEEDED.map(k => {
+    const v = st.s[k];
+    const res = v ? `${v === "ok" ? "✓" : "✗"}${k === "touch" && touchPct ? " " + touchPct + " %" : ""}` : t.tmPending;
+    return `<div class="tm-row">
+      <div><strong>${itemName(k)}</strong><div class="tm-res ${v || ""}">${res}</div></div>
+      <button class="btn solid" data-tm="${k}">${t.start}</button>
+      <span class="tool-status" id="tms-${k}"></span>
+      ${k === "speakers" ? `<a class="btn ghost" href="${YT}" target="_blank" rel="noopener">${t.yt}</a>` : ""}
+    </div>`;
+  }).join("");
   if (NEEDED.every(k => st.s[k])) {
     $("tmDone").hidden = false;
     drawQr($("tmQr"), `${BASE}?${NEEDED.map(k => `${k}=${st.s[k]}`).join("&")}&lang=${st.lang}`);
   }
 }
-$("tmTouchBtn").onclick = startTouch;
-$("tmPixBtn").onclick = () => { $("tmAsk").hidden = true; startColors(); };
-$("tmNo").onclick = () => { st.s.pixels = "ok"; $("tmAsk").hidden = true; update(); tmRefresh(); };
-$("tmYes").onclick = () => { st.s.pixels = "bad"; $("tmAsk").hidden = true; update(); tmRefresh(); };
+$("tmRows").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tm]");
+  if (b) { $("tmAsk").hidden = true; runTool(b.dataset.tm); }
+});
 
 /* Entradas */
-$("model").oninput = e => { st.model = e.target.value.trim().toUpperCase(); save(); decode(); update(); };
-$("notes").oninput = e => { st.notes = e.target.value; save(); update(); };
+$("model").oninput = e => { st.model = e.target.value.trim().toUpperCase(); decode(); update(); };
+$("notes").oninput = e => { st.notes = e.target.value; update(); };
 $("fullModel").oninput = e => { st.fullModel = e.target.value.trim(); update(); };
+$("price").oninput = e => { st.price = e.target.value.trim(); update(); };
 $("buyDate").oninput = $("buyDate").onchange = e => { st.buyDate = e.target.value; update(); };
 $("dtBuy").onclick = () => { st.dateKind = "buy"; update(); };
 $("dtWar").onclick = () => { st.dateKind = "war"; update(); };
@@ -811,7 +975,7 @@ const battInput = () => {
   st.health = $("health").value; st.cycles = $("cycles").value;
   const h = parseInt(st.health, 10);
   if (h) st.s.battery = h >= 80 ? "ok" : "bad";
-  save(); battery(); update();
+  battery(); update();
 };
 $("health").oninput = battInput;
 $("cycles").oninput = battInput;
@@ -828,21 +992,15 @@ if (navigator.share) {
 let armed = false;
 $("reset").onclick = () => {
   if (!armed) { armed = true; $("reset").textContent = T().resetConfirm; setTimeout(() => { armed = false; $("reset").textContent = T().reset; }, 3000); return; }
-  st = Object.assign(EMPTY(), { lang: st.lang }); save();
-  ["model", "notes", "health", "cycles", "fullModel", "buyDate"].forEach(id => $(id).value = "");
-  $("importNote").hidden = true;
-  armed = false; $("toast").textContent = "";
+  st = Object.assign(EMPTY(), { lang: st.lang });
+  ["model", "notes", "health", "cycles", "fullModel", "buyDate", "price"].forEach(id => $(id).value = "");
+  armed = false; $("toast").textContent = ""; $("importNote").hidden = true;
   applyLang();
 };
 
-$("model").value = st.model;
-$("notes").value = st.notes;
-$("health").value = st.health;
-$("cycles").value = st.cycles;
-if (TEST_MODE) { document.querySelector(".wrap").hidden = true; $("testMode").hidden = false; }
+if (TEST_MODE) { $("main").hidden = true; $("testMode").hidden = false; }
 $("importNote").hidden = !imported;
 applyLang();
-if (TEST_MODE) tmRefresh();
 </script>
 </body>
 </html>
